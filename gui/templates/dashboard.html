@@ -59,7 +59,7 @@
       btn.disabled = true;
       fetch('/api/door/' + channel + '/command', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 'Content-Type': 'application/json', 'X-Requested-With': 'XMLHttpRequest' },
         body: JSON.stringify({ command: command })
       })
       .then(function(r) { return r.json(); })

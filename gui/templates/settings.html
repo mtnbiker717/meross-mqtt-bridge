@@ -138,7 +138,7 @@
 
     fetch('/settings/test-meross', {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      headers: { 'Content-Type': 'application/json', 'X-Requested-With': 'XMLHttpRequest' },
       body: JSON.stringify({
         email: document.getElementById('meross-email').value,
         password: document.getElementById('meross-password').value,
@@ -186,7 +186,7 @@
 
     fetch('/settings/test-mqtt', {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      headers: { 'Content-Type': 'application/json', 'X-Requested-With': 'XMLHttpRequest' },
       body: JSON.stringify({
         host: document.getElementById('mqtt-host').value,
         port: parseInt(document.getElementById('mqtt-port').value) || 1883,
@@ -249,7 +249,7 @@
 
     fetch('/settings/save', {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      headers: { 'Content-Type': 'application/json', 'X-Requested-With': 'XMLHttpRequest' },
       body: JSON.stringify(payload)
     })
     .then(function(r) { return r.json(); })

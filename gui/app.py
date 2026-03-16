@@ -242,8 +242,22 @@ if _static_dir.is_dir():
     app.mount("/static", StaticFiles(directory=str(_static_dir)), name="static")
 
 # ---------------------------------------------------------------------------
-# Middleware: force password change redirect
+# Middleware (LIFO order: first registered = outermost)
 # ---------------------------------------------------------------------------
+
+
+@app.middleware("http")
+async def limit_body_size(request: Request, call_next):
+    """Reject request bodies larger than 64KB."""
+    max_size = 64 * 1024
+    if request.method in ("POST", "PUT", "PATCH"):
+        content_length = request.headers.get("content-length")
+        if content_length and int(content_length) > max_size:
+            return JSONResponse(
+                {"error": "Request body too large"},
+                status_code=413
+            )
+    return await call_next(request)
 
 
 @app.middleware("http")
@@ -261,6 +275,45 @@ async def force_password_change_middleware(request: Request, call_next):
             return RedirectResponse(url="/change-password", status_code=303)
 
     return await call_next(request)
+
+
+@app.middleware("http")
+async def csrf_header_middleware(request: Request, call_next):
+    """Require X-Requested-With header on JSON POST endpoints."""
+    if request.method == "POST":
+        content_type = request.headers.get("content-type", "")
+        path = request.url.path
+        json_paths = {
+            "/doors/save", "/settings/save", "/settings/test-meross",
+            "/settings/test-mqtt",
+        }
+        if path in json_paths or path.startswith("/api/"):
+            if "application/json" in content_type:
+                if request.headers.get("X-Requested-With") != "XMLHttpRequest":
+                    return JSONResponse(
+                        {"error": "Missing required header"},
+                        status_code=403
+                    )
+    return await call_next(request)
+
+
+@app.middleware("http")
+async def security_headers(request: Request, call_next):
+    response = await call_next(request)
+    response.headers["X-Content-Type-Options"] = "nosniff"
+    response.headers["X-Frame-Options"] = "DENY"
+    response.headers["Referrer-Policy"] = "strict-origin-when-cross-origin"
+    response.headers["Permissions-Policy"] = "geolocation=(), microphone=(), camera=()"
+    response.headers["Content-Security-Policy"] = (
+        "default-src 'self'; "
+        "script-src 'self' 'unsafe-inline' https://cdn.tailwindcss.com https://cdnjs.cloudflare.com; "
+        "style-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net https://cdnjs.cloudflare.com https://fonts.googleapis.com; "
+        "font-src 'self' https://fonts.gstatic.com https://cdnjs.cloudflare.com; "
+        "img-src 'self' data:; "
+        "connect-src 'self' wss: ws:; "
+        "frame-ancestors 'none';"
+    )
+    return response
 
 # ---------------------------------------------------------------------------
 # Template helper
@@ -405,6 +458,23 @@ import re
 _USERNAME_RE = re.compile(r"^[a-zA-Z0-9_]+$")
 
 
+def _validate_door(door: dict, index: int) -> str | None:
+    """Return error string if door config is invalid, else None."""
+    channel = door.get("channel")
+    if channel not in (1, 2, 3):
+        return f"Door {index}: channel must be 1, 2, or 3"
+    name = door.get("name", "")
+    if len(name) > 64:
+        return f"Door {index}: name too long (max 64 chars)"
+    for field in ("command_topic", "state_topic"):
+        val = door.get(field, "")
+        if len(val) > 256:
+            return f"Door {index}: {field} too long (max 256 chars)"
+        if val and not re.match(r'^[a-zA-Z0-9/_\-+#]+$', val):
+            return f"Door {index}: {field} contains invalid characters"
+    return None
+
+
 @app.get("/account", response_class=HTMLResponse)
 async def account_page(request: Request, user: str = Depends(require_auth)):
     token = request.cookies.get("session", "")
@@ -536,6 +606,14 @@ async def doors_save(request: Request, user: str = Depends(require_auth)):
     token = request.cookies.get("session", "")
     body = await request.json()
     doors = body.get("doors", [])
+
+    errors = []
+    for i, door in enumerate(doors):
+        err = _validate_door(door, i + 1)
+        if err:
+            errors.append(err)
+    if errors:
+        return JSONResponse({"success": False, "message": "; ".join(errors)}, status_code=400)
 
     update_config_section("doors", doors)
 

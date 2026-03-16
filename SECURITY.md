@@ -48,20 +48,30 @@ The session cookie does not set the `Secure` flag because TLS is not guaranteed.
 
 CSRF tokens are currently applied to the password change form only. Other POST endpoints (settings save, door config save) rely on the session cookie for authentication. Full CSRF coverage is planned before public release.
 
+### Tailwind CDN requires unsafe-inline CSP
+
+The GUI uses the Tailwind CDN play script which generates styles at runtime via
+JavaScript. This requires `unsafe-inline` in the Content Security Policy's
+`script-src` directive, which weakens XSS protection. For a hardened deployment,
+replace the Tailwind CDN with a compiled CSS build step. This is tracked as a
+future improvement.
+
 ---
 
 ## Pre-Public Release Checklist
 
 The following items are tracked for completion before this repository is made public:
 
-- [ ] Full CSRF token coverage on all POST endpoints
-- [ ] Dependency pinning + `pip-audit` clean run
-- [ ] Docker containers run as non-root user
-- [ ] Body size limits on JSON POST endpoints
-- [ ] Schema validation on door config writes
-- [ ] Security headers (X-Frame-Options, X-Content-Type-Options, CSP)
-- [ ] SRI hashes on CDN script/style tags
-- [ ] README screenshots
+- [x] Full CSRF token coverage on form endpoints
+- [x] X-Requested-With header check on all JSON POST endpoints
+- [x] Dependency pinning
+- [x] Docker containers run as non-root user (app user)
+- [x] Body size limits on JSON POST endpoints (64KB)
+- [x] Schema validation on door config writes
+- [x] Security headers (X-Frame-Options, X-Content-Type-Options, CSP, Referrer-Policy)
+- [x] SRI hashes on DaisyUI and Font Awesome CDN resources
+- [ ] pip-audit clean run (run before making repo public)
+- [ ] Tailwind CDN replaced with build step for full CSP compliance (future improvement)
 
 ---
 
