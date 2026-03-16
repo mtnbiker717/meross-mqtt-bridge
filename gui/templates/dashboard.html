@@ -19,15 +19,16 @@
 <!-- Door cards grid (hidden until data loads) -->
 <div id="door-grid" class="grid grid-cols-1 lg:grid-cols-3 gap-4 hidden">
   {% for ch in [1, 2, 3] %}
-  <div class="card bg-base-200 shadow-md transition-opacity" id="door-{{ ch }}">
+  <div class="card bg-base-200 shadow-md hidden" id="door-{{ ch }}">
     <div class="card-body">
       <div class="flex items-center justify-between">
         <h2 class="card-title" id="door-{{ ch }}-name"></h2>
         <span class="badge badge-sm badge-outline">CH {{ ch }}</span>
       </div>
 
-      <div class="flex flex-wrap gap-2 my-3">
-        <span class="badge badge-lg badge-ghost" id="door-{{ ch }}-state">Unknown</span>
+      <div class="flex flex-col items-center py-4" id="door-{{ ch }}-visual">
+        <div id="door-{{ ch }}-svg" class="mb-3"></div>
+        <span class="text-lg font-semibold" id="door-{{ ch }}-state-text">--</span>
       </div>
       <div class="text-xs text-base-content/40 mt-1" id="door-{{ ch }}-updated"></div>
 
@@ -95,21 +96,51 @@
   function updateDoorCard(ch, door) {
     const card = document.getElementById('door-' + ch);
     const nameEl = document.getElementById('door-' + ch + '-name');
-    const stateEl = document.getElementById('door-' + ch + '-state');
+    const svgEl = document.getElementById('door-' + ch + '-svg');
+    const stateText = document.getElementById('door-' + ch + '-state-text');
     const updatedEl = document.getElementById('door-' + ch + '-updated');
     const buttons = document.querySelectorAll('#door-' + ch + ' .door-cmd-btn');
 
-    nameEl.textContent = door.name;
+    // Capitalize name
+    nameEl.textContent = door.name
+      ? door.name.charAt(0).toUpperCase() + door.name.slice(1)
+      : 'Door ' + ch;
 
-    // State badge
+    // SVG door illustration + state text
     const state = (door.state || 'unknown').toLowerCase();
-    stateEl.textContent = state.charAt(0).toUpperCase() + state.slice(1);
+
     if (state === 'closed') {
-      stateEl.className = 'badge badge-lg badge-success';
+      stateText.textContent = 'Closed';
+      stateText.className = 'text-lg font-semibold text-success';
+      svgEl.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" width="80" height="100" viewBox="0 0 80 100">' +
+        '<rect x="5" y="5" width="70" height="90" rx="3" fill="none" stroke="currentColor" stroke-width="3"/>' +
+        '<rect x="10" y="10" width="60" height="80" rx="2" fill="oklch(var(--b3))"/>' +
+        '<rect x="15" y="15" width="22" height="28" rx="2" fill="none" stroke="currentColor" stroke-width="1.5" opacity="0.4"/>' +
+        '<rect x="43" y="15" width="22" height="28" rx="2" fill="none" stroke="currentColor" stroke-width="1.5" opacity="0.4"/>' +
+        '<rect x="15" y="50" width="22" height="34" rx="2" fill="none" stroke="currentColor" stroke-width="1.5" opacity="0.4"/>' +
+        '<rect x="43" y="50" width="22" height="34" rx="2" fill="none" stroke="currentColor" stroke-width="1.5" opacity="0.4"/>' +
+        '<circle cx="58" cy="52" r="3" fill="oklch(var(--p))"/>' +
+        '</svg>';
     } else if (state === 'open') {
-      stateEl.className = 'badge badge-lg badge-error';
+      stateText.textContent = 'Open';
+      stateText.className = 'text-lg font-semibold text-error';
+      svgEl.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" width="80" height="100" viewBox="0 0 80 100">' +
+        '<rect x="5" y="5" width="70" height="90" rx="3" fill="none" stroke="currentColor" stroke-width="3"/>' +
+        '<path d="M10 10 L55 18 L55 88 L10 90 Z" fill="oklch(var(--b3))"/>' +
+        '<line x1="10" y1="38" x2="55" y2="41" stroke="currentColor" stroke-width="1.5" opacity="0.4"/>' +
+        '<line x1="10" y1="62" x2="55" y2="63" stroke="currentColor" stroke-width="1.5" opacity="0.4"/>' +
+        '<line x1="32" y1="10" x2="33" y2="90" stroke="currentColor" stroke-width="1.5" opacity="0.4"/>' +
+        '<path d="M55 18 L70 10 L70 10 L55 18" fill="oklch(var(--b2))" opacity="0.5"/>' +
+        '<circle cx="20" cy="52" r="3" fill="oklch(var(--p))"/>' +
+        '</svg>';
     } else {
-      stateEl.className = 'badge badge-lg badge-ghost';
+      stateText.textContent = 'Unknown';
+      stateText.className = 'text-lg font-semibold text-base-content/40';
+      svgEl.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" width="80" height="100" viewBox="0 0 80 100">' +
+        '<rect x="5" y="5" width="70" height="90" rx="3" fill="none" stroke="currentColor" stroke-width="3" opacity="0.3"/>' +
+        '<rect x="10" y="10" width="60" height="80" rx="2" fill="oklch(var(--b3))" opacity="0.3"/>' +
+        '<text x="40" y="58" text-anchor="middle" font-size="28" fill="currentColor" opacity="0.3">?</text>' +
+        '</svg>';
     }
 
     // Per-door last updated
@@ -118,12 +149,12 @@
       updatedEl.textContent = 'Updated: ' + d.toLocaleTimeString();
     }
 
-    // Disabled card styling
+    // Hide disabled, show enabled
     const enabled = door.enabled !== false;
     if (enabled) {
-      card.classList.remove('opacity-40');
+      card.classList.remove('hidden');
     } else {
-      card.classList.add('opacity-40');
+      card.classList.add('hidden');
     }
 
     // Enable/disable buttons
