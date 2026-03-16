@@ -48,13 +48,14 @@ The session cookie does not set the `Secure` flag because TLS is not guaranteed.
 
 CSRF tokens are currently applied to the password change form only. Other POST endpoints (settings save, door config save) rely on the session cookie for authentication. Full CSRF coverage is planned before public release.
 
-### Tailwind CDN requires unsafe-inline CSP
+### Script inline requires unsafe-inline CSP
 
-The GUI uses the Tailwind CDN play script which generates styles at runtime via
-JavaScript. This requires `unsafe-inline` in the Content Security Policy's
-`script-src` directive, which weakens XSS protection. For a hardened deployment,
-replace the Tailwind CDN with a compiled CSS build step. This is tracked as a
-future improvement.
+The GUI uses inline `<script>` blocks in templates for page-specific logic.
+This requires `unsafe-inline` in the Content Security Policy's `script-src` directive.
+The Tailwind CDN has been replaced with a compiled build step — that source of
+unsafe-inline is fully removed. The remaining unsafe-inline is from template scripts
+and can be eliminated by migrating to nonce-based CSP, which is tracked as a
+future hardening improvement.
 
 ---
 
@@ -71,7 +72,7 @@ The following items are tracked for completion before this repository is made pu
 - [x] Security headers (X-Frame-Options, X-Content-Type-Options, CSP, Referrer-Policy)
 - [x] SRI hashes on DaisyUI and Font Awesome CDN resources
 - [x] pip-audit clean run — 0 vulnerabilities after dependency updates
-- [ ] Tailwind CDN replaced with build step for full CSP compliance (future improvement)
+- [x] Tailwind CDN replaced with compiled build step — CDN script-src removed from CSP
 
 Note: meross_iot is pinned to 0.4.7.3. Upgrading to 0.4.10.x requires
 breaking API changes in bridge.py and is tracked as a separate upgrade.
