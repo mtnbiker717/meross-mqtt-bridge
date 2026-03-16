@@ -1,6 +1,15 @@
-.env
-*.env
+legacy/
+config/config.yaml
+config/.secret_key
+logs/
 __pycache__/
 *.pyc
 *.pyo
+.env
+*.env
 .DS_Store
+node_modules/
+*.egg-info/
+dist/
+build/
+.venv/
