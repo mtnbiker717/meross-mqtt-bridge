@@ -65,7 +65,7 @@ The following items are tracked for completion before this repository is made pu
 - [x] Full CSRF token coverage on form endpoints
 - [x] X-Requested-With header check on all JSON POST endpoints
 - [x] Dependency pinning
-- [x] Docker containers run as non-root user (app user)
+- [x] Docker containers run as non-root user (gosu entrypoint pattern)
 - [x] Body size limits on JSON POST endpoints (64KB)
 - [x] Schema validation on door config writes
 - [x] Security headers (X-Frame-Options, X-Content-Type-Options, CSP, Referrer-Policy)
