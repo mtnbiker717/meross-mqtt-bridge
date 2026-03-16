@@ -1,0 +1,173 @@
+{% extends "base.html" %}
+{% block title %}Account - Meross Bridge{% endblock %}
+{% block title_bar %}Account Settings{% endblock %}
+
+{% block content %}
+<div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
+  <!-- Change Username card -->
+  <div class="card bg-base-200 shadow-md">
+    <div class="card-body">
+      <h2 class="card-title mb-4">
+        <i class="fas fa-user text-primary"></i>
+        Change Username
+      </h2>
+
+      <div id="username-error" class="alert alert-error shadow-sm mb-3 hidden">
+        <i class="fas fa-circle-exclamation"></i>
+        <span id="username-error-text"></span>
+      </div>
+      <div id="username-success" class="alert alert-success shadow-sm mb-3 hidden">
+        <i class="fas fa-check-circle"></i>
+        <span id="username-success-text"></span>
+      </div>
+
+      {% if username_error %}
+        <div class="alert alert-error shadow-sm mb-3">
+          <i class="fas fa-circle-exclamation"></i>
+          <span>{{ username_error }}</span>
+        </div>
+      {% endif %}
+
+      <form method="POST" action="/account/username" id="username-form">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+
+        <div class="form-control mb-3">
+          <label class="label">
+            <span class="label-text">Current Username</span>
+          </label>
+          <input type="text" value="{{ current_user }}" class="input input-bordered w-full" disabled>
+        </div>
+
+        <div class="form-control mb-3">
+          <label class="label">
+            <span class="label-text">Current Password</span>
+          </label>
+          <input type="password" name="current_password" placeholder="Confirm your password" class="input input-bordered w-full" required>
+        </div>
+
+        <div class="form-control mb-4">
+          <label class="label">
+            <span class="label-text">New Username</span>
+          </label>
+          <input type="text" name="new_username" id="new_username" placeholder="New username" class="input input-bordered w-full" required minlength="3" pattern="[a-zA-Z0-9_]+">
+          <label class="label">
+            <span class="label-text-alt text-base-content/50">Letters, numbers, and underscores only. Min 3 characters.</span>
+          </label>
+        </div>
+
+        <button type="submit" class="btn btn-primary">
+          <i class="fas fa-save mr-1"></i>
+          Save Username
+        </button>
+      </form>
+    </div>
+  </div>
+
+  <!-- Change Password card -->
+  <div class="card bg-base-200 shadow-md">
+    <div class="card-body">
+      <h2 class="card-title mb-4">
+        <i class="fas fa-key text-primary"></i>
+        Change Password
+      </h2>
+
+      <div id="password-error" class="alert alert-error shadow-sm mb-3 hidden">
+        <i class="fas fa-circle-exclamation"></i>
+        <span id="password-error-text"></span>
+      </div>
+      <div id="password-success" class="alert alert-success shadow-sm mb-3 hidden">
+        <i class="fas fa-check-circle"></i>
+        <span id="password-success-text"></span>
+      </div>
+
+      {% if password_error %}
+        <div class="alert alert-error shadow-sm mb-3">
+          <i class="fas fa-circle-exclamation"></i>
+          <span>{{ password_error }}</span>
+        </div>
+      {% endif %}
+
+      <form method="POST" action="/account/password" id="password-form">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+
+        <div class="form-control mb-3">
+          <label class="label">
+            <span class="label-text">Current Password</span>
+          </label>
+          <input type="password" name="current_password" placeholder="Current password" class="input input-bordered w-full" required>
+        </div>
+
+        <div class="form-control mb-3">
+          <label class="label">
+            <span class="label-text">New Password</span>
+          </label>
+          <input type="password" name="new_password" id="new_password" placeholder="New password" class="input input-bordered w-full" required>
+        </div>
+
+        <div class="form-control mb-4">
+          <label class="label">
+            <span class="label-text">Confirm Password</span>
+          </label>
+          <input type="password" name="confirm_password" id="confirm_password" placeholder="Confirm password" class="input input-bordered w-full" required>
+        </div>
+
+        <button type="submit" class="btn btn-primary">
+          <i class="fas fa-save mr-1"></i>
+          Save Password
+        </button>
+      </form>
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+  // Client-side password validation
+  document.getElementById('password-form').addEventListener('submit', function(e) {
+    var newPw = document.getElementById('new_password').value;
+    var confirmPw = document.getElementById('confirm_password').value;
+    var errorDiv = document.getElementById('password-error');
+    var errorText = document.getElementById('password-error-text');
+
+    errorDiv.classList.add('hidden');
+
+    if (newPw !== confirmPw) {
+      e.preventDefault();
+      errorText.textContent = 'Passwords do not match.';
+      errorDiv.classList.remove('hidden');
+      return;
+    }
+
+    if (newPw.length < 8) {
+      e.preventDefault();
+      errorText.textContent = 'Password must be at least 8 characters.';
+      errorDiv.classList.remove('hidden');
+      return;
+    }
+  });
+
+  // Client-side username validation
+  document.getElementById('username-form').addEventListener('submit', function(e) {
+    var newUser = document.getElementById('new_username').value;
+    var errorDiv = document.getElementById('username-error');
+    var errorText = document.getElementById('username-error-text');
+
+    errorDiv.classList.add('hidden');
+
+    if (newUser.length < 3) {
+      e.preventDefault();
+      errorText.textContent = 'Username must be at least 3 characters.';
+      errorDiv.classList.remove('hidden');
+      return;
+    }
+
+    if (!/^[a-zA-Z0-9_]+$/.test(newUser)) {
+      e.preventDefault();
+      errorText.textContent = 'Username can only contain letters, numbers, and underscores.';
+      errorDiv.classList.remove('hidden');
+      return;
+    }
+  });
+</script>
+{% endblock %}

@@ -397,6 +397,117 @@ async def change_password_submit(
     return RedirectResponse(url="/dashboard", status_code=303)
 
 # ---------------------------------------------------------------------------
+# Account settings
+# ---------------------------------------------------------------------------
+
+import re
+
+_USERNAME_RE = re.compile(r"^[a-zA-Z0-9_]+$")
+
+
+@app.get("/account", response_class=HTMLResponse)
+async def account_page(request: Request, user: str = Depends(require_auth)):
+    token = request.cookies.get("session", "")
+    return render(request, "account.html", user=user, token=token)
+
+
+@app.post("/account/username")
+async def account_change_username(
+    request: Request,
+    current_password: str = Form(...),
+    new_username: str = Form(...),
+    csrf_token: str = Form(""),
+    user: str = Depends(require_auth),
+):
+    token = request.cookies.get("session", "")
+
+    if not token or not _verify_csrf_token(token, csrf_token):
+        raise HTTPException(status_code=403, detail="Invalid CSRF token")
+
+    cfg = read_config()
+    gui = cfg.get("gui", {})
+    stored_hash = gui.get("password_hash", "")
+
+    if not bcrypt.checkpw(current_password.encode("utf-8"), stored_hash.encode("utf-8")):
+        return render(
+            request, "account.html",
+            {"username_error": "Current password is incorrect"},
+            user=user, token=token,
+        )
+
+    if len(new_username) < 3:
+        return render(
+            request, "account.html",
+            {"username_error": "Username must be at least 3 characters"},
+            user=user, token=token,
+        )
+
+    if not _USERNAME_RE.match(new_username):
+        return render(
+            request, "account.html",
+            {"username_error": "Username can only contain letters, numbers, and underscores"},
+            user=user, token=token,
+        )
+
+    gui["username"] = new_username
+    cfg["gui"] = gui
+    write_config(cfg)
+
+    # Invalidate session — force re-login with new username
+    response = RedirectResponse(url="/login", status_code=303)
+    response.delete_cookie("session")
+    flash(token, "Username changed. Please log in again.")
+    return response
+
+
+@app.post("/account/password")
+async def account_change_password(
+    request: Request,
+    current_password: str = Form(...),
+    new_password: str = Form(...),
+    confirm_password: str = Form(...),
+    csrf_token: str = Form(""),
+    user: str = Depends(require_auth),
+):
+    token = request.cookies.get("session", "")
+
+    if not token or not _verify_csrf_token(token, csrf_token):
+        raise HTTPException(status_code=403, detail="Invalid CSRF token")
+
+    cfg = read_config()
+    gui = cfg.get("gui", {})
+    stored_hash = gui.get("password_hash", "")
+
+    if not bcrypt.checkpw(current_password.encode("utf-8"), stored_hash.encode("utf-8")):
+        return render(
+            request, "account.html",
+            {"password_error": "Current password is incorrect"},
+            user=user, token=token,
+        )
+
+    if new_password != confirm_password:
+        return render(
+            request, "account.html",
+            {"password_error": "New passwords do not match"},
+            user=user, token=token,
+        )
+
+    if len(new_password) < 8:
+        return render(
+            request, "account.html",
+            {"password_error": "Password must be at least 8 characters"},
+            user=user, token=token,
+        )
+
+    new_hash = bcrypt.hashpw(new_password.encode("utf-8"), bcrypt.gensalt()).decode("utf-8")
+    gui["password_hash"] = new_hash
+    cfg["gui"] = gui
+    write_config(cfg)
+
+    flash(token, "Password updated.")
+    return RedirectResponse(url="/account", status_code=303)
+
+# ---------------------------------------------------------------------------
 # Page routes
 # ---------------------------------------------------------------------------
 
