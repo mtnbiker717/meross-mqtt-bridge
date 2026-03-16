@@ -70,8 +70,11 @@ The following items are tracked for completion before this repository is made pu
 - [x] Schema validation on door config writes
 - [x] Security headers (X-Frame-Options, X-Content-Type-Options, CSP, Referrer-Policy)
 - [x] SRI hashes on DaisyUI and Font Awesome CDN resources
-- [ ] pip-audit clean run (run before making repo public)
+- [x] pip-audit clean run — 0 vulnerabilities after dependency updates
 - [ ] Tailwind CDN replaced with build step for full CSP compliance (future improvement)
+
+Note: meross_iot is pinned to 0.4.7.3. Upgrading to 0.4.10.x requires
+breaking API changes in bridge.py and is tracked as a separate upgrade.
 
 ---
 
