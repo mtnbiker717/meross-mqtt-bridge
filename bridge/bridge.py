@@ -90,7 +90,7 @@ def load_config() -> dict:
     path = _resolve_config_path()
     logger.info("Loading config from %s", path)
     with open(path, "r") as f:
-        return yaml.safe_load(f)
+        return yaml.safe_load(f) or {}
 
 
 def config_is_ready(cfg: dict) -> bool:
