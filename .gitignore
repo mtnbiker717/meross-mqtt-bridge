@@ -8,6 +8,7 @@ __pycache__/
 .env
 *.env
 .DS_Store
+.claude/
 node_modules/
 *.egg-info/
 dist/
