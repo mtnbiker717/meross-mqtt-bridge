@@ -162,7 +162,7 @@ See [SECURITY.md](SECURITY.md) for known limitations and deployment recommendati
 ### Permission denied on config/ or logs/
 The containers run as a non-root user. If you see permission errors on startup:
 ```bash
-chown -R $(id -u):$(id -g) config logs
+sudo chmod -R a+rwX config logs
 docker compose restart
 ```
 

@@ -10,8 +10,9 @@ if [ -z "$SECRET_KEY" ]; then
   # If still unset: bridge runs in plaintext mode (graceful degradation)
 fi
 
-# Ensure mounted directories are writable by app user
-chown -R app:app /app/config /app/logs 2>/dev/null || true
+# Ensure directories and files are accessible by the app user
+# Use chmod instead of chown to preserve host ownership
+chmod -R a+rwX /app/config /app/logs 2>/dev/null || true
 
 # Drop privileges and exec the main process
 exec gosu app "$@"
