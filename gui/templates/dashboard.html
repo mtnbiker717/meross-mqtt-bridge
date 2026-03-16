@@ -22,8 +22,8 @@
   <div class="card bg-base-200 shadow-md hidden" id="door-{{ ch }}">
     <div class="card-body">
       <div class="flex items-center justify-between">
-        <h2 class="card-title" id="door-{{ ch }}-name"></h2>
-        <span class="badge badge-sm badge-outline">CH {{ ch }}</span>
+        <h2 class="card-title text-base-content font-bold" id="door-{{ ch }}-name"></h2>
+        <span class="badge badge-sm badge-ghost text-base-content/70 font-medium">CH {{ ch }}</span>
       </div>
 
       <div class="flex flex-col items-center py-4" id="door-{{ ch }}-visual">
@@ -112,7 +112,7 @@
     if (state === 'closed') {
       stateText.textContent = 'Closed';
       stateText.className = 'text-lg font-semibold text-success';
-      svgEl.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" width="90" height="80" viewBox="0 0 90 80">' +
+      svgEl.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" width="90" height="80" viewBox="0 0 90 80" style="color: rgba(255,255,255,0.75)">' +
         '<rect x="3" y="2" width="5" height="76" rx="2" fill="currentColor" opacity="0.25"/>' +
         '<rect x="82" y="2" width="5" height="76" rx="2" fill="currentColor" opacity="0.25"/>' +
         '<rect x="8" y="4" width="74" height="13" rx="1" fill="oklch(var(--b3))" stroke="currentColor" stroke-width="1.5" opacity="0.9"/>' +
@@ -125,7 +125,7 @@
     } else if (state === 'open') {
       stateText.textContent = 'Open';
       stateText.className = 'text-lg font-semibold text-error';
-      svgEl.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" width="90" height="80" viewBox="0 0 90 80">' +
+      svgEl.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" width="90" height="80" viewBox="0 0 90 80" style="color: rgba(255,255,255,0.75)">' +
         '<rect x="3" y="2" width="5" height="76" rx="2" fill="currentColor" opacity="0.25"/>' +
         '<rect x="82" y="2" width="5" height="76" rx="2" fill="currentColor" opacity="0.25"/>' +
         '<rect x="8" y="4" width="74" height="4" rx="1" fill="oklch(var(--b3))" stroke="currentColor" stroke-width="1" opacity="0.6"/>' +
@@ -138,7 +138,7 @@
     } else {
       stateText.textContent = 'Unknown';
       stateText.className = 'text-lg font-semibold text-base-content/40';
-      svgEl.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" width="90" height="80" viewBox="0 0 90 80">' +
+      svgEl.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" width="90" height="80" viewBox="0 0 90 80" style="color: rgba(255,255,255,0.75)">' +
         '<rect x="3" y="2" width="5" height="76" rx="2" fill="currentColor" opacity="0.1"/>' +
         '<rect x="82" y="2" width="5" height="76" rx="2" fill="currentColor" opacity="0.1"/>' +
         '<rect x="8" y="4" width="74" height="70" rx="1" fill="none" stroke="currentColor" stroke-width="2" stroke-dasharray="6 3" opacity="0.2"/>' +
