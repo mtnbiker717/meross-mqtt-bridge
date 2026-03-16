@@ -47,12 +47,12 @@ mqtt:
 doors:
   - name: ""
     channel: 1
-    command_topic: "garage/command/main"
+    command_topic: "garage/command/door_1"
     state_topic: "garage/state/door_1"
     enabled: false
   - name: ""
     channel: 2
-    command_topic: "garage/command/small"
+    command_topic: "garage/command/door_2"
     state_topic: "garage/state/door_2"
     enabled: false
   - name: ""
@@ -96,12 +96,13 @@ open http://localhost:8080
 
 | Topic | Payload | Action |
 |---|---|---|
-| `garage/command/main` | `open` or `close` | Control door on channel 1 |
-| `garage/command/small` | `open` or `close` | Control door on channel 2 |
+| `garage/command/door_1` | `open` or `close` | Control door on channel 1 |
+| `garage/command/door_2` | `open` or `close` | Control door on channel 2 |
 | `garage/command/door_3` | `open` or `close` | Control door on channel 3 |
 | Any command topic | `query` | Force a state refresh |
 
-Topics are fully configurable per door in the GUI.
+> Topic names are fully configurable per door in the GUI. The defaults shown
+> above are examples — rename them to match your existing MQTT setup.
 
 ### State (subscribe to these for door status)
 
