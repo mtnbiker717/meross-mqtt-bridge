@@ -16,18 +16,18 @@
       </h2>
 
       <div class="form-control mb-3">
-        <label class="label">
+        <label class="label" for="meross-email">
           <span class="label-text">Email</span>
         </label>
-        <input type="email" id="meross-email" value="{{ meross.get('email', '') }}" placeholder="user@example.com" class="input input-bordered w-full">
+        <input type="email" id="meross-email" autocomplete="email" value="{{ meross.get('email', '') }}" placeholder="user@example.com" class="input input-bordered w-full">
       </div>
 
       <div class="form-control mb-3">
-        <label class="label">
+        <label class="label" for="meross-password">
           <span class="label-text">Password</span>
         </label>
         <div class="join w-full">
-          <input type="password" id="meross-password" value="" placeholder="{{ 'Password saved' if meross.get('password', '') else 'Meross password' }}" class="input input-bordered join-item w-full">
+          <input type="password" id="meross-password" autocomplete="off" value="" placeholder="{{ 'Password saved' if meross.get('password', '') else 'Meross password' }}" class="input input-bordered join-item w-full">
           <button type="button" class="btn join-item toggle-pw-btn" data-target="meross-password">
             <i class="fas fa-eye"></i>
           </button>
@@ -35,10 +35,10 @@
       </div>
 
       <div class="form-control mb-4">
-        <label class="label">
+        <label class="label" for="meross-api-url">
           <span class="label-text">API URL</span>
         </label>
-        <input type="text" id="meross-api-url" value="{{ meross.get('api_url', '') }}" placeholder="https://iotx-us.meross.com" class="input input-bordered w-full">
+        <input type="text" id="meross-api-url" autocomplete="url" value="{{ meross.get('api_url', '') }}" placeholder="https://iotx-us.meross.com" class="input input-bordered w-full">
       </div>
 
       <div class="flex items-center gap-3">
@@ -60,32 +60,32 @@
       </h2>
 
       <div class="form-control mb-3">
-        <label class="label">
+        <label class="label" for="mqtt-host">
           <span class="label-text">Host</span>
         </label>
-        <input type="text" id="mqtt-host" value="{{ mqtt.get('host', '') }}" placeholder="192.168.1.100" class="input input-bordered w-full">
+        <input type="text" id="mqtt-host" autocomplete="off" value="{{ mqtt.get('host', '') }}" placeholder="192.168.1.100" class="input input-bordered w-full">
       </div>
 
       <div class="form-control mb-3">
-        <label class="label">
+        <label class="label" for="mqtt-port">
           <span class="label-text">Port</span>
         </label>
-        <input type="number" id="mqtt-port" value="{{ mqtt.get('port', 1883) }}" placeholder="1883" class="input input-bordered w-full">
+        <input type="number" id="mqtt-port" autocomplete="off" value="{{ mqtt.get('port', 1883) }}" placeholder="1883" class="input input-bordered w-full">
       </div>
 
       <div class="form-control mb-3">
-        <label class="label">
+        <label class="label" for="mqtt-user">
           <span class="label-text">Username</span>
         </label>
-        <input type="text" id="mqtt-user" value="{{ mqtt.get('user', '') }}" placeholder="mqtt_user" class="input input-bordered w-full">
+        <input type="text" id="mqtt-user" autocomplete="off" value="{{ mqtt.get('user', '') }}" placeholder="mqtt_user" class="input input-bordered w-full">
       </div>
 
       <div class="form-control mb-3">
-        <label class="label">
+        <label class="label" for="mqtt-pass">
           <span class="label-text">Password</span>
         </label>
         <div class="join w-full">
-          <input type="password" id="mqtt-pass" value="" placeholder="{{ 'Password saved' if mqtt.get('pass', '') else 'MQTT password' }}" class="input input-bordered join-item w-full">
+          <input type="password" id="mqtt-pass" autocomplete="off" value="" placeholder="{{ 'Password saved' if mqtt.get('pass', '') else 'MQTT password' }}" class="input input-bordered join-item w-full">
           <button type="button" class="btn join-item toggle-pw-btn" data-target="mqtt-pass">
             <i class="fas fa-eye"></i>
           </button>
@@ -112,19 +112,6 @@
 
 {% block scripts %}
 <script>
-  function showToast(message, type) {
-    const container = document.getElementById('toast-container');
-    const alert = document.createElement('div');
-    alert.className = 'alert alert-' + type + ' shadow-sm';
-    alert.innerHTML = '<span>' + message + '</span>';
-    container.appendChild(alert);
-    setTimeout(function() {
-      alert.style.transition = 'opacity 0.5s';
-      alert.style.opacity = '0';
-      setTimeout(function() { alert.remove(); }, 500);
-    }, 4000);
-  }
-
   // Password show/hide toggles
   document.querySelectorAll('.toggle-pw-btn').forEach(function(btn) {
     btn.addEventListener('click', function() {
@@ -146,6 +133,7 @@
     const btn = this;
     const resultEl = document.getElementById('meross-test-result');
     btn.classList.add('loading');
+    btn.disabled = true;
     resultEl.classList.add('hidden');
 
     fetch('/settings/test-meross', {
@@ -160,6 +148,7 @@
     .then(function(r) { return r.json(); })
     .then(function(data) {
       btn.classList.remove('loading');
+      btn.disabled = false;
       resultEl.classList.remove('hidden');
       if (data.success) {
         resultEl.className = 'badge badge-success';
@@ -175,6 +164,7 @@
     })
     .catch(function(err) {
       btn.classList.remove('loading');
+      btn.disabled = false;
       resultEl.classList.remove('hidden');
       resultEl.className = 'badge badge-error';
       resultEl.textContent = 'Failed: ' + err.message;
@@ -191,6 +181,7 @@
     const btn = this;
     const resultEl = document.getElementById('mqtt-test-result');
     btn.classList.add('loading');
+    btn.disabled = true;
     resultEl.classList.add('hidden');
 
     fetch('/settings/test-mqtt', {
@@ -206,6 +197,7 @@
     .then(function(r) { return r.json(); })
     .then(function(data) {
       btn.classList.remove('loading');
+      btn.disabled = false;
       resultEl.classList.remove('hidden');
       if (data.success) {
         resultEl.className = 'badge badge-success';
@@ -221,6 +213,7 @@
     })
     .catch(function(err) {
       btn.classList.remove('loading');
+      btn.disabled = false;
       resultEl.classList.remove('hidden');
       resultEl.className = 'badge badge-error';
       resultEl.textContent = 'Failed: ' + err.message;
@@ -235,6 +228,7 @@
   document.getElementById('save-settings-btn').addEventListener('click', function() {
     const btn = this;
     btn.classList.add('loading');
+    btn.disabled = true;
 
     const merossPayload = {
       email: document.getElementById('meross-email').value,
@@ -261,6 +255,7 @@
     .then(function(r) { return r.json(); })
     .then(function(data) {
       btn.classList.remove('loading');
+      btn.disabled = false;
       if (data.error) {
         showToast(data.error, 'error');
       } else {
@@ -269,6 +264,7 @@
     })
     .catch(function(err) {
       btn.classList.remove('loading');
+      btn.disabled = false;
       showToast('Failed to save: ' + err.message, 'error');
     });
   });

@@ -1,66 +1,17 @@
 <!DOCTYPE html>
 <html lang="en" data-theme="dim">
 <head>
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>{% block title %}Meross Bridge{% endblock %}</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/daisyui@4/dist/full.min.css">
-  <style>
-    /* Consistent green primary across both themes */
-    :root {
-      --color-primary: oklch(60% 0.185 150);
-      --color-primary-content: oklch(98% 0.02 150);
-      --icon-color: rgba(0, 0, 0, 0.6);
-    }
-    [data-theme="light"] {
-      --color-primary: oklch(60% 0.185 150);
-      --color-primary-content: oklch(98% 0.02 150);
-    }
-
-    /* Custom dark mode color overrides */
-    [data-theme="dim"] {
-      --color-base-100: oklch(27.0% 0.025 252);
-      --color-base-200: oklch(18.0% 0.020 252);
-      --color-base-300: oklch(14.0% 0.025 252);
-      --color-base-content: oklch(97.3% 0.004 247);
-      --color-primary: oklch(60% 0.185 150);
-      --color-primary-content: oklch(98% 0.02 150);
-      --icon-color: rgba(255, 255, 255, 0.75);
-    }
-
-    /* Card border for definition in dark mode */
-    [data-theme="dim"] .card {
-      border: 1px solid rgba(255, 255, 255, 0.06);
-    }
-
-    /* Sidebar darker than page */
-    [data-theme="dim"] .drawer-side aside {
-      background-color: oklch(14.0% 0.025 252);
-      border-right: 1px solid rgba(255, 255, 255, 0.06);
-    }
-
-    /* Nav section labels */
-    [data-theme="dim"] .menu-title {
-      color: rgba(255, 255, 255, 0.35);
-    }
-
-    /* Inter font everywhere */
-    body {
-      font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
-    }
-  </style>
+  <link rel="stylesheet" href="/static/theme.css">
+  <script src="/static/theme.js"></script>
   <script src="https://cdn.tailwindcss.com"></script>
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
   <link rel="icon" type="image/svg+xml" href="/static/favicon.svg">
-  <script>
-    (function() {
-      const saved = localStorage.getItem('meross-theme');
-      const theme = saved === 'dark' ? 'dim' : (saved || (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dim' : 'light'));
-      document.documentElement.setAttribute('data-theme', theme);
-    })();
-  </script>
 </head>
 <body class="min-h-screen">
   <div class="drawer lg:drawer-open">
@@ -81,7 +32,7 @@
         <div class="flex-none">
           <!-- Theme toggle -->
           <button id="theme-toggle" class="btn btn-ghost btn-circle" title="Toggle theme">
-            <i class="fas fa-moon text-lg" id="theme-icon"></i>
+            <i class="theme-icon fas fa-moon text-lg"></i>
           </button>
         </div>
       </div>
@@ -167,25 +118,11 @@
     </div>
   </div>
 
+  <script src="/static/utils.js"></script>
   <script>
     // Theme toggle
-    const themeToggle = document.getElementById('theme-toggle');
-    const themeIcon = document.getElementById('theme-icon');
-
-    function applyTheme(theme) {
-      document.documentElement.setAttribute('data-theme', theme);
-      localStorage.setItem('meross-theme', theme);
-      themeIcon.className = theme === 'dim' ? 'fas fa-moon text-lg' : 'fas fa-sun text-lg';
-    }
-
-    // Initialize icon
-    const savedTheme = localStorage.getItem('meross-theme');
-    const currentTheme = savedTheme === 'dark' ? 'dim' : (savedTheme || (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dim' : 'light'));
-    applyTheme(currentTheme);
-
-    themeToggle.addEventListener('click', function() {
-      const current = document.documentElement.getAttribute('data-theme');
-      applyTheme(current === 'dim' ? 'light' : 'dim');
+    document.getElementById('theme-toggle').addEventListener('click', function() {
+      MerossTheme.toggle();
     });
 
     // Auto-dismiss flash messages after 5 seconds

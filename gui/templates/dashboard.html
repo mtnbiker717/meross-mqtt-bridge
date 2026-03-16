@@ -17,7 +17,7 @@
 </div>
 
 <!-- Door cards grid (hidden until data loads) -->
-<div id="door-grid" class="grid grid-cols-1 lg:grid-cols-3 gap-4 hidden">
+<div id="door-grid" class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4 hidden">
   {% for ch in [1, 2, 3] %}
   <div class="card bg-base-200 shadow-md hidden" id="door-{{ ch }}">
     <div class="card-body">
@@ -56,6 +56,7 @@
       const channel = this.dataset.channel;
       const command = this.dataset.command;
       btn.classList.add('loading');
+      btn.disabled = true;
       fetch('/api/door/' + channel + '/command', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -64,10 +65,12 @@
       .then(function(r) { return r.json(); })
       .then(function() {
         btn.classList.remove('loading');
+        btn.disabled = false;
         pollDoorState();
       })
       .catch(function() {
         btn.classList.remove('loading');
+        btn.disabled = false;
       });
     });
   });

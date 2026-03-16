@@ -39,17 +39,17 @@
         </div>
 
         <div class="form-control mb-3">
-          <label class="label">
+          <label class="label" for="acct-username-pw">
             <span class="label-text">Current Password</span>
           </label>
-          <input type="password" name="current_password" placeholder="Confirm your password" class="input input-bordered w-full" required>
+          <input type="password" name="current_password" id="acct-username-pw" autocomplete="current-password" placeholder="Confirm your password" class="input input-bordered w-full" required>
         </div>
 
         <div class="form-control mb-4">
-          <label class="label">
+          <label class="label" for="new_username">
             <span class="label-text">New Username</span>
           </label>
-          <input type="text" name="new_username" id="new_username" placeholder="New username" class="input input-bordered w-full" required minlength="3" pattern="[a-zA-Z0-9_]+">
+          <input type="text" name="new_username" id="new_username" autocomplete="username" placeholder="New username" class="input input-bordered w-full" required minlength="3" pattern="[a-zA-Z0-9_]+">
           <label class="label">
             <span class="label-text-alt text-base-content/50">Letters, numbers, and underscores only. Min 3 characters.</span>
           </label>
@@ -91,24 +91,24 @@
         <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
 
         <div class="form-control mb-3">
-          <label class="label">
+          <label class="label" for="acct-current-pw">
             <span class="label-text">Current Password</span>
           </label>
-          <input type="password" name="current_password" placeholder="Current password" class="input input-bordered w-full" required>
+          <input type="password" name="current_password" id="acct-current-pw" autocomplete="current-password" placeholder="Current password" class="input input-bordered w-full" required>
         </div>
 
         <div class="form-control mb-3">
-          <label class="label">
+          <label class="label" for="new_password">
             <span class="label-text">New Password</span>
           </label>
-          <input type="password" name="new_password" id="new_password" placeholder="New password" class="input input-bordered w-full" required>
+          <input type="password" name="new_password" id="new_password" autocomplete="new-password" placeholder="New password" class="input input-bordered w-full" required>
         </div>
 
         <div class="form-control mb-4">
-          <label class="label">
+          <label class="label" for="confirm_password">
             <span class="label-text">Confirm Password</span>
           </label>
-          <input type="password" name="confirm_password" id="confirm_password" placeholder="Confirm password" class="input input-bordered w-full" required>
+          <input type="password" name="confirm_password" id="confirm_password" autocomplete="new-password" placeholder="Confirm password" class="input input-bordered w-full" required>
         </div>
 
         <button type="submit" class="btn btn-primary">

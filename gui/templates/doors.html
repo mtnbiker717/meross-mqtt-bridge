@@ -44,26 +44,26 @@
 
           <!-- Name -->
           <div class="form-control">
-            <label class="label">
+            <label class="label" for="door-{{ i }}-name">
               <span class="label-text">Name</span>
             </label>
-            <input type="text" name="doors[{{ i }}][name]" value="{{ door.get('name', '') }}" placeholder="e.g. Garage Door" class="input input-bordered w-full">
+            <input type="text" name="doors[{{ i }}][name]" id="door-{{ i }}-name" value="{{ door.get('name', '') }}" placeholder="e.g. Garage Door" class="input input-bordered w-full">
           </div>
 
           <!-- Command Topic -->
           <div class="form-control">
-            <label class="label">
+            <label class="label" for="door-{{ i }}-command">
               <span class="label-text">Command Topic</span>
             </label>
-            <input type="text" name="doors[{{ i }}][command_topic]" value="{{ door.get('command_topic', '') }}" placeholder="e.g. home/garage/door1/command" class="input input-bordered w-full">
+            <input type="text" name="doors[{{ i }}][command_topic]" id="door-{{ i }}-command" value="{{ door.get('command_topic', '') }}" placeholder="e.g. home/garage/door1/command" class="input input-bordered w-full">
           </div>
 
           <!-- State Topic -->
           <div class="form-control md:col-span-2">
-            <label class="label">
+            <label class="label" for="door-{{ i }}-state">
               <span class="label-text">State Topic</span>
             </label>
-            <input type="text" name="doors[{{ i }}][state_topic]" value="{{ door.get('state_topic', '') }}" placeholder="e.g. home/garage/door1/state" class="input input-bordered w-full">
+            <input type="text" name="doors[{{ i }}][state_topic]" id="door-{{ i }}-state" value="{{ door.get('state_topic', '') }}" placeholder="e.g. home/garage/door1/state" class="input input-bordered w-full">
           </div>
         </div>
       </div>
@@ -80,19 +80,6 @@
 
 {% block scripts %}
 <script>
-  function showToast(message, type) {
-    const container = document.getElementById('toast-container');
-    const alert = document.createElement('div');
-    alert.className = 'alert alert-' + type + ' shadow-sm';
-    alert.innerHTML = '<span>' + message + '</span>';
-    container.appendChild(alert);
-    setTimeout(function() {
-      alert.style.transition = 'opacity 0.5s';
-      alert.style.opacity = '0';
-      setTimeout(function() { alert.remove(); }, 500);
-    }, 4000);
-  }
-
   // Auto-populate topics from name
   var defaultCommandPatterns = [/^garage\/command\/.+$/, /^$/];
   var defaultStatePatterns = [/^garage\/state\/door_\d+$/, /^$/];
