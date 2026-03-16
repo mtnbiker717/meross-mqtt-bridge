@@ -1,11 +1,8 @@
-version: "3.8"
-
 services:
   bridge:
     build: ./bridge
     container_name: meross-bridge
     restart: unless-stopped
-    user: "1000:1000"
     volumes:
       - ./config:/app/config
       - ./logs:/app/logs
@@ -19,7 +16,6 @@ services:
     build: ./gui
     container_name: meross-gui
     restart: unless-stopped
-    user: "1000:1000"
     ports:
       - "8080:8080"
     volumes:

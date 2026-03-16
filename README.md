@@ -34,6 +34,9 @@ cd meross-mqtt-bridge
 # 2. Create required directories
 mkdir -p config logs
 
+# Set permissions (required on some systems)
+chmod 755 config logs
+
 # 3. Create your config from the example
 cp config/config.example.yaml config/config.yaml
 
@@ -153,6 +156,19 @@ The GUI writes config changes, the bridge watches for file changes and reloads w
 See [SECURITY.md](SECURITY.md) for known limitations and deployment recommendations.
 
 **Important:** This service uses HTTP by default. Do not expose port 8080 to the internet without placing it behind a reverse proxy with TLS (e.g. Nginx, Caddy, or Traefik).
+
+## Troubleshooting
+
+### Permission denied on config/ or logs/
+The containers run as a non-root user. If you see permission errors on startup:
+```bash
+chown -R $(id -u):$(id -g) config logs
+docker compose restart
+```
+
+### version attribute warning in docker compose
+The `version` field in `docker-compose.yml` is obsolete in Compose V2.
+It can be safely ignored or removed from the file.
 
 ## License
 
