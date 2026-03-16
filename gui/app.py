@@ -620,51 +620,46 @@ async def api_status(user: str = Depends(require_auth)):
             bridge_running = (time.time() - mtime) < 60
     except OSError:
         pass
-    last_updated = None
-    state_file = LOGS_DIR / "door_states.json"
-    try:
-        if state_file.exists():
-            with open(state_file, "r") as f:
-                states_data = json.load(f)
-            # Look for a timestamp field in the data
-            if isinstance(states_data, dict) and "timestamp" in states_data:
-                last_updated = states_data["timestamp"]
-            elif isinstance(states_data, list) and states_data:
-                # Use file mtime as fallback
-                last_updated = datetime.fromtimestamp(
-                    state_file.stat().st_mtime, tz=timezone.utc
-                ).isoformat()
-            else:
-                last_updated = datetime.fromtimestamp(
-                    state_file.stat().st_mtime, tz=timezone.utc
-                ).isoformat()
-    except (OSError, json.JSONDecodeError):
-        pass
-
-    return {"bridge_running": bridge_running, "last_updated": last_updated}
+    return {"bridge_running": bridge_running}
 
 
 @app.get("/api/doors/state")
 async def api_doors_state(user: str = Depends(require_auth)):
+    cfg = read_config()
+    config_doors = cfg.get("doors", [])
+
+    # Load state file if it exists
     state_file = LOGS_DIR / "door_states.json"
+    state_by_channel: dict = {}
+    last_updated = None
     try:
         if state_file.exists():
-            with open(state_file, "r") as f:
-                return json.load(f)
+            raw = json.loads(state_file.read_text())
+            last_updated = raw.get("timestamp")
+            for key, val in raw.items():
+                if key == "timestamp":
+                    continue
+                if isinstance(val, dict) and "channel" in val:
+                    state_by_channel[val["channel"]] = val
     except (OSError, json.JSONDecodeError):
         pass
-    # Fallback: return door list from config with unknown state
-    cfg = read_config()
-    doors = cfg.get("doors", [])
-    return [
-        {
-            "name": d.get("name", ""),
-            "channel": d.get("channel", 0),
-            "state": "unknown",
-            "enabled": d.get("enabled", False),
-        }
-        for d in doors
-    ]
+
+    # Build normalized array — one entry per configured door
+    result = []
+    for door in config_doors:
+        ch = door.get("channel")
+        saved = state_by_channel.get(ch, {})
+        result.append({
+            "channel": ch,
+            "name": door.get("name") or f"Door {ch}",
+            "enabled": door.get("enabled", False),
+            "state": saved.get("state", "unknown"),
+            "command_topic": door.get("command_topic", ""),
+            "state_topic": door.get("state_topic", ""),
+            "last_updated": last_updated,
+        })
+
+    return result
 
 
 @app.post("/api/door/{channel}/command")

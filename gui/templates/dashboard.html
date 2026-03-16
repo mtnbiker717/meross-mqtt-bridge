@@ -4,13 +4,10 @@
 
 {% block content %}
 <!-- Bridge status indicator -->
-<div class="flex items-center gap-2 mb-1" id="bridge-status">
+<div class="flex items-center gap-2 mb-4" id="bridge-status">
   <span class="loading loading-spinner loading-sm" id="bridge-spinner"></span>
   <span id="bridge-status-dot" class="hidden w-3 h-3 rounded-full"></span>
   <span id="bridge-status-text" class="text-sm font-medium">Checking bridge status...</span>
-</div>
-<div class="mb-6">
-  <span id="last-updated" class="text-xs text-base-content/40"></span>
 </div>
 
 <!-- Loading spinner (shown until first poll completes) -->
@@ -22,17 +19,17 @@
 <!-- Door cards grid (hidden until data loads) -->
 <div id="door-grid" class="grid grid-cols-1 lg:grid-cols-3 gap-4 hidden">
   {% for ch in [1, 2, 3] %}
-  <div class="card bg-base-200 shadow-md" id="door-{{ ch }}">
+  <div class="card bg-base-200 shadow-md transition-opacity" id="door-{{ ch }}">
     <div class="card-body">
       <div class="flex items-center justify-between">
-        <h2 class="card-title" id="door-{{ ch }}-name">Door {{ ch }}</h2>
+        <h2 class="card-title" id="door-{{ ch }}-name"></h2>
         <span class="badge badge-sm badge-outline">CH {{ ch }}</span>
       </div>
 
       <div class="flex flex-wrap gap-2 my-3">
         <span class="badge badge-lg badge-ghost" id="door-{{ ch }}-state">Unknown</span>
-        <span class="badge badge-ghost" id="door-{{ ch }}-enabled">--</span>
       </div>
+      <div class="text-xs text-base-content/40 mt-1" id="door-{{ ch }}-updated"></div>
 
       <div class="card-actions justify-end mt-2">
         <button class="btn btn-sm btn-warning door-cmd-btn" data-channel="{{ ch }}" data-command="open" disabled>
@@ -50,10 +47,7 @@
 
 {% block scripts %}
 <script>
-  const doorChannels = [1, 2, 3];
   let firstLoad = true;
-  let lastBridgeRunning = null;
-  let lastAllUnknown = true;
 
   // Send door command
   document.querySelectorAll('.door-cmd-btn').forEach(function(btn) {
@@ -99,12 +93,13 @@
 
   // Update door card display
   function updateDoorCard(ch, door) {
+    const card = document.getElementById('door-' + ch);
     const nameEl = document.getElementById('door-' + ch + '-name');
     const stateEl = document.getElementById('door-' + ch + '-state');
-    const enabledEl = document.getElementById('door-' + ch + '-enabled');
+    const updatedEl = document.getElementById('door-' + ch + '-updated');
     const buttons = document.querySelectorAll('#door-' + ch + ' .door-cmd-btn');
 
-    nameEl.textContent = door.name || ('Door ' + ch);
+    nameEl.textContent = door.name;
 
     // State badge
     const state = (door.state || 'unknown').toLowerCase();
@@ -117,14 +112,18 @@
       stateEl.className = 'badge badge-lg badge-ghost';
     }
 
-    // Enabled badge
+    // Per-door last updated
+    if (door.last_updated) {
+      var d = new Date(door.last_updated);
+      updatedEl.textContent = 'Updated: ' + d.toLocaleTimeString();
+    }
+
+    // Disabled card styling
     const enabled = door.enabled !== false;
     if (enabled) {
-      enabledEl.textContent = 'Enabled';
-      enabledEl.className = 'badge badge-info';
+      card.classList.remove('opacity-40');
     } else {
-      enabledEl.textContent = 'Disabled';
-      enabledEl.className = 'badge badge-ghost';
+      card.classList.add('opacity-40');
     }
 
     // Enable/disable buttons
@@ -133,31 +132,14 @@
     });
   }
 
-  function updateLastUpdated(isoStr) {
-    const el = document.getElementById('last-updated');
-    if (isoStr) {
-      var d = new Date(isoStr);
-      el.textContent = 'Last updated: ' + d.toLocaleTimeString();
-    } else {
-      el.textContent = 'Last updated: ' + new Date().toLocaleTimeString();
-    }
-  }
-
   // Poll bridge status
   function pollStatus() {
     fetch('/api/status')
       .then(function(r) { return r.json(); })
       .then(function(data) {
-        lastBridgeRunning = data.bridge_running || false;
-        // Show offline if bridge not running AND all doors unknown
-        var connected = lastBridgeRunning || !lastAllUnknown;
-        updateBridgeStatus(connected);
-        if (data.last_updated) {
-          updateLastUpdated(data.last_updated);
-        }
+        updateBridgeStatus(data.bridge_running || false);
       })
       .catch(function() {
-        lastBridgeRunning = false;
         updateBridgeStatus(false);
       });
   }
@@ -167,31 +149,9 @@
     fetch('/api/doors/state')
       .then(function(r) { return r.json(); })
       .then(function(data) {
-        const doors = data.doors || data;
-        var allUnknown = true;
-        if (Array.isArray(doors)) {
-          doors.forEach(function(door) {
-            updateDoorCard(door.channel, door);
-            if (door.state && door.state !== 'unknown') allUnknown = false;
-          });
-        } else {
-          doorChannels.forEach(function(ch) {
-            if (doors[ch] || doors[String(ch)]) {
-              var door = doors[ch] || doors[String(ch)];
-              updateDoorCard(ch, door);
-              if (door.state && door.state !== 'unknown') allUnknown = false;
-            }
-          });
-        }
-
-        lastAllUnknown = allUnknown;
-        updateLastUpdated(null);
-
-        // Re-evaluate bridge status with new door data
-        if (lastBridgeRunning !== null) {
-          var connected = lastBridgeRunning || !lastAllUnknown;
-          updateBridgeStatus(connected);
-        }
+        data.forEach(function(door) {
+          updateDoorCard(door.channel, door);
+        });
 
         if (firstLoad) {
           firstLoad = false;

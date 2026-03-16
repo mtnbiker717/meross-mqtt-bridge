@@ -55,6 +55,7 @@ def _setup_logging(level_name: str = "INFO") -> logging.Logger:
     level = getattr(logging, level_name.upper(), logging.INFO)
     logger = logging.getLogger("MerossBridge")
     logger.setLevel(level)
+    logger.propagate = False
     logger.handlers.clear()
 
     fmt = logging.Formatter(
