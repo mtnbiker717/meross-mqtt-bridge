@@ -249,7 +249,7 @@ if _static_dir.is_dir():
 @app.middleware("http")
 async def force_password_change_middleware(request: Request, call_next):
     # Skip for non-authenticated or specific paths
-    skip_paths = {"/login", "/logout", "/change-password", "/ws/logs"}
+    skip_paths = {"/login", "/logout", "/change-password"}
     if request.url.path in skip_paths or request.url.path.startswith("/static"):
         return await call_next(request)
 
@@ -380,10 +380,10 @@ async def change_password_submit(
             user=user, token=token,
         )
 
-    if len(new_password) < 4:
+    if len(new_password) < 8:
         return render(
             request, "change_password.html",
-            {"error": "Password must be at least 4 characters", "forced": gui.get("force_password_change", False)},
+            {"error": "Password must be at least 8 characters", "forced": gui.get("force_password_change", False)},
             user=user, token=token,
         )
 
