@@ -1,0 +1,184 @@
+{% extends "base.html" %}
+{% block title %}Dashboard{% endblock %}
+{% block title_bar %}Dashboard{% endblock %}
+
+{% block content %}
+<!-- Bridge status indicator -->
+<div class="flex items-center gap-2 mb-6" id="bridge-status">
+  <span class="loading loading-spinner loading-sm" id="bridge-spinner"></span>
+  <span id="bridge-status-dot" class="hidden w-3 h-3 rounded-full"></span>
+  <span id="bridge-status-text" class="text-sm font-medium">Checking bridge status...</span>
+</div>
+
+<!-- Loading spinner (shown until first poll completes) -->
+<div id="loading-overlay" class="flex flex-col items-center justify-center py-20">
+  <span class="loading loading-lg loading-spinner text-primary"></span>
+  <p class="mt-4 text-base-content/60">Loading door status...</p>
+</div>
+
+<!-- Door cards grid (hidden until data loads) -->
+<div id="door-grid" class="grid grid-cols-1 lg:grid-cols-3 gap-4 hidden">
+  {% for ch in [1, 2, 3] %}
+  <div class="card bg-base-200 shadow-md" id="door-{{ ch }}">
+    <div class="card-body">
+      <div class="flex items-center justify-between">
+        <h2 class="card-title" id="door-{{ ch }}-name">Door {{ ch }}</h2>
+        <span class="badge badge-sm badge-outline">CH {{ ch }}</span>
+      </div>
+
+      <div class="flex flex-wrap gap-2 my-3">
+        <span class="badge badge-lg badge-ghost" id="door-{{ ch }}-state">Unknown</span>
+        <span class="badge badge-ghost" id="door-{{ ch }}-enabled">--</span>
+      </div>
+
+      <div class="card-actions justify-end mt-2">
+        <button class="btn btn-sm btn-warning door-cmd-btn" data-channel="{{ ch }}" data-command="open" disabled>
+          <i class="fas fa-door-open mr-1"></i> Open
+        </button>
+        <button class="btn btn-sm btn-success door-cmd-btn" data-channel="{{ ch }}" data-command="close" disabled>
+          <i class="fas fa-door-closed mr-1"></i> Close
+        </button>
+      </div>
+    </div>
+  </div>
+  {% endfor %}
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+  const doorChannels = [1, 2, 3];
+  let firstLoad = true;
+
+  // Send door command
+  document.querySelectorAll('.door-cmd-btn').forEach(function(btn) {
+    btn.addEventListener('click', function() {
+      const channel = this.dataset.channel;
+      const command = this.dataset.command;
+      btn.classList.add('loading');
+      fetch('/api/door/' + channel + '/command', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ command: command })
+      })
+      .then(function(r) { return r.json(); })
+      .then(function() {
+        btn.classList.remove('loading');
+        pollDoorState();
+      })
+      .catch(function() {
+        btn.classList.remove('loading');
+      });
+    });
+  });
+
+  // Update bridge status display
+  function updateBridgeStatus(connected) {
+    const dot = document.getElementById('bridge-status-dot');
+    const text = document.getElementById('bridge-status-text');
+    const spinner = document.getElementById('bridge-spinner');
+
+    spinner.classList.add('hidden');
+    dot.classList.remove('hidden');
+
+    if (connected) {
+      dot.className = 'w-3 h-3 rounded-full bg-success';
+      text.textContent = 'Bridge Connected';
+      text.className = 'text-sm font-medium text-success';
+    } else {
+      dot.className = 'w-3 h-3 rounded-full bg-error';
+      text.textContent = 'Bridge Offline';
+      text.className = 'text-sm font-medium text-error';
+    }
+  }
+
+  // Update door card display
+  function updateDoorCard(ch, door) {
+    const nameEl = document.getElementById('door-' + ch + '-name');
+    const stateEl = document.getElementById('door-' + ch + '-state');
+    const enabledEl = document.getElementById('door-' + ch + '-enabled');
+    const buttons = document.querySelectorAll('#door-' + ch + ' .door-cmd-btn');
+
+    nameEl.textContent = door.name || ('Door ' + ch);
+
+    // State badge
+    const state = (door.state || 'unknown').toLowerCase();
+    stateEl.textContent = state.charAt(0).toUpperCase() + state.slice(1);
+    if (state === 'closed') {
+      stateEl.className = 'badge badge-lg badge-success';
+    } else if (state === 'open') {
+      stateEl.className = 'badge badge-lg badge-error';
+    } else {
+      stateEl.className = 'badge badge-lg badge-ghost';
+    }
+
+    // Enabled badge
+    const enabled = door.enabled !== false;
+    if (enabled) {
+      enabledEl.textContent = 'Enabled';
+      enabledEl.className = 'badge badge-info';
+    } else {
+      enabledEl.textContent = 'Disabled';
+      enabledEl.className = 'badge badge-ghost';
+    }
+
+    // Enable/disable buttons
+    buttons.forEach(function(btn) {
+      btn.disabled = !enabled;
+    });
+  }
+
+  // Poll bridge status
+  function pollStatus() {
+    fetch('/api/status')
+      .then(function(r) { return r.json(); })
+      .then(function(data) {
+        updateBridgeStatus(data.bridge_running || false);
+      })
+      .catch(function() {
+        updateBridgeStatus(false);
+      });
+  }
+
+  // Poll door states
+  function pollDoorState() {
+    fetch('/api/doors/state')
+      .then(function(r) { return r.json(); })
+      .then(function(data) {
+        const doors = data.doors || data;
+        if (Array.isArray(doors)) {
+          doors.forEach(function(door) {
+            updateDoorCard(door.channel, door);
+          });
+        } else {
+          doorChannels.forEach(function(ch) {
+            if (doors[ch] || doors[String(ch)]) {
+              updateDoorCard(ch, doors[ch] || doors[String(ch)]);
+            }
+          });
+        }
+
+        if (firstLoad) {
+          firstLoad = false;
+          document.getElementById('loading-overlay').classList.add('hidden');
+          document.getElementById('door-grid').classList.remove('hidden');
+        }
+      })
+      .catch(function() {
+        if (firstLoad) {
+          firstLoad = false;
+          document.getElementById('loading-overlay').classList.add('hidden');
+          document.getElementById('door-grid').classList.remove('hidden');
+        }
+      });
+  }
+
+  // Initial poll
+  pollStatus();
+  pollDoorState();
+
+  // Poll every 10 seconds
+  setInterval(pollStatus, 10000);
+  setInterval(pollDoorState, 10000);
+</script>
+{% endblock %}

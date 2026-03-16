@@ -1,0 +1,7 @@
+meross_iot==0.4.7.3
+paho-mqtt==1.6.1
+aiohttp
+aiosignal
+pycryptodomex
+pyyaml
+watchdog

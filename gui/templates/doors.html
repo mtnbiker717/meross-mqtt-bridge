@@ -1,0 +1,130 @@
+{% extends "base.html" %}
+{% block title %}Door Configuration{% endblock %}
+{% block title_bar %}Door Configuration{% endblock %}
+
+{% block content %}
+<!-- Info alert -->
+<div class="alert alert-info shadow-sm mb-6">
+  <i class="fas fa-circle-info"></i>
+  <span>Changes are applied automatically — the bridge reloads its config within a few seconds.</span>
+</div>
+
+<!-- Toast container -->
+<div class="toast toast-end toast-top z-50" id="toast-container"></div>
+
+<form id="doors-form">
+  <div class="grid grid-cols-1 gap-6 mb-6">
+    {% for i in range(3) %}
+    {% set door = doors[i] if doors|length > i else {} %}
+    {% set ch = door.channel|default(i + 1) %}
+    <div class="card bg-base-200 shadow-md">
+      <div class="card-body">
+        <h2 class="card-title mb-4">
+          <i class="fas fa-door-open text-primary"></i>
+          Channel {{ ch }}
+        </h2>
+
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <!-- Enable toggle -->
+          <div class="form-control">
+            <label class="label cursor-pointer justify-start gap-3">
+              <input type="checkbox" name="doors[{{ i }}][enabled]" class="toggle toggle-primary" {{ 'checked' if door.get('enabled', false) else '' }}>
+              <span class="label-text font-medium">Enabled</span>
+            </label>
+          </div>
+
+          <!-- Channel display -->
+          <div class="form-control">
+            <label class="label">
+              <span class="label-text">Channel</span>
+            </label>
+            <div class="badge badge-lg badge-outline">{{ ch }}</div>
+            <input type="hidden" name="doors[{{ i }}][channel]" value="{{ ch }}">
+          </div>
+
+          <!-- Name -->
+          <div class="form-control">
+            <label class="label">
+              <span class="label-text">Name</span>
+            </label>
+            <input type="text" name="doors[{{ i }}][name]" value="{{ door.get('name', '') }}" placeholder="e.g. Garage Door" class="input input-bordered w-full">
+          </div>
+
+          <!-- Command Topic -->
+          <div class="form-control">
+            <label class="label">
+              <span class="label-text">Command Topic</span>
+            </label>
+            <input type="text" name="doors[{{ i }}][command_topic]" value="{{ door.get('command_topic', '') }}" placeholder="e.g. home/garage/door1/command" class="input input-bordered w-full">
+          </div>
+
+          <!-- State Topic -->
+          <div class="form-control md:col-span-2">
+            <label class="label">
+              <span class="label-text">State Topic</span>
+            </label>
+            <input type="text" name="doors[{{ i }}][state_topic]" value="{{ door.get('state_topic', '') }}" placeholder="e.g. home/garage/door1/state" class="input input-bordered w-full">
+          </div>
+        </div>
+      </div>
+    </div>
+    {% endfor %}
+  </div>
+
+  <button type="submit" class="btn btn-primary">
+    <i class="fas fa-save mr-1"></i>
+    Save Configuration
+  </button>
+</form>
+{% endblock %}
+
+{% block scripts %}
+<script>
+  function showToast(message, type) {
+    const container = document.getElementById('toast-container');
+    const alert = document.createElement('div');
+    alert.className = 'alert alert-' + type + ' shadow-sm';
+    alert.innerHTML = '<span>' + message + '</span>';
+    container.appendChild(alert);
+    setTimeout(function() {
+      alert.style.transition = 'opacity 0.5s';
+      alert.style.opacity = '0';
+      setTimeout(function() { alert.remove(); }, 500);
+    }, 4000);
+  }
+
+  document.getElementById('doors-form').addEventListener('submit', function(e) {
+    e.preventDefault();
+
+    const formData = new FormData(this);
+    const doors = [];
+
+    for (let i = 0; i < 3; i++) {
+      doors.push({
+        channel: parseInt(formData.get('doors[' + i + '][channel]')) || (i + 1),
+        enabled: formData.get('doors[' + i + '][enabled]') === 'on',
+        name: formData.get('doors[' + i + '][name]') || '',
+        command_topic: formData.get('doors[' + i + '][command_topic]') || '',
+        state_topic: formData.get('doors[' + i + '][state_topic]') || ''
+      });
+    }
+
+    fetch('/doors/save', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ doors: doors })
+    })
+    .then(function(r) { return r.json(); })
+    .then(function(data) {
+      if (data.error) {
+        showToast(data.error, 'error');
+      } else {
+        showToast('Door configuration saved successfully.', 'success');
+      }
+    })
+    .catch(function(err) {
+      showToast('Failed to save: ' + err.message, 'error');
+    });
+  });
+</script>
+{% endblock %}

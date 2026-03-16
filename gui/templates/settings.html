@@ -1,0 +1,222 @@
+{% extends "base.html" %}
+{% block title %}Settings{% endblock %}
+{% block title_bar %}Settings{% endblock %}
+
+{% block content %}
+<!-- Toast container -->
+<div class="toast toast-end toast-top z-50" id="toast-container"></div>
+
+<div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
+  <!-- Meross Cloud card -->
+  <div class="card bg-base-200 shadow-md">
+    <div class="card-body">
+      <h2 class="card-title mb-4">
+        <i class="fas fa-cloud text-primary"></i>
+        Meross Cloud
+      </h2>
+
+      <div class="form-control mb-3">
+        <label class="label">
+          <span class="label-text">Email</span>
+        </label>
+        <input type="email" id="meross-email" value="{{ meross.get('email', '') }}" placeholder="user@example.com" class="input input-bordered w-full">
+      </div>
+
+      <div class="form-control mb-3">
+        <label class="label">
+          <span class="label-text">Password</span>
+        </label>
+        <div class="join w-full">
+          <input type="password" id="meross-password" value="" placeholder="{{ 'Password saved' if meross.get('password', '') else 'Meross password' }}" class="input input-bordered join-item w-full">
+          <button type="button" class="btn join-item toggle-pw-btn" data-target="meross-password">
+            <i class="fas fa-eye"></i>
+          </button>
+        </div>
+      </div>
+
+      <div class="form-control mb-4">
+        <label class="label">
+          <span class="label-text">API URL</span>
+        </label>
+        <input type="text" id="meross-api-url" value="{{ meross.get('api_url', '') }}" placeholder="https://iotx-us.meross.com" class="input input-bordered w-full">
+      </div>
+
+      <div class="flex items-center gap-3">
+        <button type="button" id="test-meross-btn" class="btn btn-outline btn-sm">
+          <i class="fas fa-plug mr-1"></i>
+          Test Connection
+        </button>
+        <span id="meross-test-result" class="hidden"></span>
+      </div>
+    </div>
+  </div>
+
+  <!-- MQTT Broker card -->
+  <div class="card bg-base-200 shadow-md">
+    <div class="card-body">
+      <h2 class="card-title mb-4">
+        <i class="fas fa-network-wired text-primary"></i>
+        MQTT Broker
+      </h2>
+
+      <div class="form-control mb-3">
+        <label class="label">
+          <span class="label-text">Host</span>
+        </label>
+        <input type="text" id="mqtt-host" value="{{ mqtt.get('host', '') }}" placeholder="192.168.1.100" class="input input-bordered w-full">
+      </div>
+
+      <div class="form-control mb-3">
+        <label class="label">
+          <span class="label-text">Port</span>
+        </label>
+        <input type="number" id="mqtt-port" value="{{ mqtt.get('port', 1883) }}" placeholder="1883" class="input input-bordered w-full">
+      </div>
+
+      <div class="form-control mb-3">
+        <label class="label">
+          <span class="label-text">Username</span>
+        </label>
+        <input type="text" id="mqtt-user" value="{{ mqtt.get('user', '') }}" placeholder="mqtt_user" class="input input-bordered w-full">
+      </div>
+
+      <div class="form-control mb-3">
+        <label class="label">
+          <span class="label-text">Password</span>
+        </label>
+        <div class="join w-full">
+          <input type="password" id="mqtt-pass" value="" placeholder="{{ 'Password saved' if mqtt.get('pass', '') else 'MQTT password' }}" class="input input-bordered join-item w-full">
+          <button type="button" class="btn join-item toggle-pw-btn" data-target="mqtt-pass">
+            <i class="fas fa-eye"></i>
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Save button -->
+<button type="button" id="save-settings-btn" class="btn btn-primary">
+  <i class="fas fa-save mr-1"></i>
+  Save Settings
+</button>
+{% endblock %}
+
+{% block scripts %}
+<script>
+  function showToast(message, type) {
+    const container = document.getElementById('toast-container');
+    const alert = document.createElement('div');
+    alert.className = 'alert alert-' + type + ' shadow-sm';
+    alert.innerHTML = '<span>' + message + '</span>';
+    container.appendChild(alert);
+    setTimeout(function() {
+      alert.style.transition = 'opacity 0.5s';
+      alert.style.opacity = '0';
+      setTimeout(function() { alert.remove(); }, 500);
+    }, 4000);
+  }
+
+  // Password show/hide toggles
+  document.querySelectorAll('.toggle-pw-btn').forEach(function(btn) {
+    btn.addEventListener('click', function() {
+      const target = document.getElementById(this.dataset.target);
+      const icon = this.querySelector('i');
+      if (target.type === 'password') {
+        target.type = 'text';
+        icon.className = 'fas fa-eye-slash';
+      } else {
+        target.type = 'password';
+        icon.className = 'fas fa-eye';
+      }
+    });
+  });
+
+  // Test Meross connection
+  var testResultTimer = null;
+  document.getElementById('test-meross-btn').addEventListener('click', function() {
+    const btn = this;
+    const resultEl = document.getElementById('meross-test-result');
+    btn.classList.add('loading');
+    resultEl.classList.add('hidden');
+
+    fetch('/settings/test-meross', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        email: document.getElementById('meross-email').value,
+        password: document.getElementById('meross-password').value,
+        api_url: document.getElementById('meross-api-url').value
+      })
+    })
+    .then(function(r) { return r.json(); })
+    .then(function(data) {
+      btn.classList.remove('loading');
+      resultEl.classList.remove('hidden');
+      if (data.success) {
+        resultEl.className = 'badge badge-success';
+        resultEl.textContent = 'Connected';
+      } else {
+        resultEl.className = 'badge badge-error';
+        resultEl.textContent = 'Failed: ' + (data.message || 'Unknown error');
+      }
+      if (testResultTimer) clearTimeout(testResultTimer);
+      testResultTimer = setTimeout(function() {
+        resultEl.classList.add('hidden');
+      }, 10000);
+    })
+    .catch(function(err) {
+      btn.classList.remove('loading');
+      resultEl.classList.remove('hidden');
+      resultEl.className = 'badge badge-error';
+      resultEl.textContent = 'Failed: ' + err.message;
+      if (testResultTimer) clearTimeout(testResultTimer);
+      testResultTimer = setTimeout(function() {
+        resultEl.classList.add('hidden');
+      }, 10000);
+    });
+  });
+
+  // Save settings
+  document.getElementById('save-settings-btn').addEventListener('click', function() {
+    const btn = this;
+    btn.classList.add('loading');
+
+    const merossPayload = {
+      email: document.getElementById('meross-email').value,
+      api_url: document.getElementById('meross-api-url').value
+    };
+    const merossPw = document.getElementById('meross-password').value;
+    if (merossPw) merossPayload.password = merossPw;
+
+    const mqttPayload = {
+      host: document.getElementById('mqtt-host').value,
+      port: parseInt(document.getElementById('mqtt-port').value) || 1883,
+      user: document.getElementById('mqtt-user').value
+    };
+    const mqttPw = document.getElementById('mqtt-pass').value;
+    if (mqttPw) mqttPayload.pass = mqttPw;
+
+    const payload = { meross: merossPayload, mqtt: mqttPayload };
+
+    fetch('/settings/save', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload)
+    })
+    .then(function(r) { return r.json(); })
+    .then(function(data) {
+      btn.classList.remove('loading');
+      if (data.error) {
+        showToast(data.error, 'error');
+      } else {
+        showToast('Settings saved successfully.', 'success');
+      }
+    })
+    .catch(function(err) {
+      btn.classList.remove('loading');
+      showToast('Failed to save: ' + err.message, 'error');
+    });
+  });
+</script>
+{% endblock %}

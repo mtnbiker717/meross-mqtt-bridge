@@ -1,0 +1,154 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>{% block title %}Meross MQTT Bridge{% endblock %}</title>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/daisyui@4/dist/full.min.css">
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+  <script>
+    (function() {
+      const saved = localStorage.getItem('meross-theme') || 'dark';
+      document.documentElement.setAttribute('data-theme', saved);
+    })();
+  </script>
+</head>
+<body class="min-h-screen">
+  <div class="drawer lg:drawer-open">
+    <input id="sidebar-toggle" type="checkbox" class="drawer-toggle">
+
+    <!-- Main content area -->
+    <div class="drawer-content flex flex-col">
+      <!-- Topbar -->
+      <div class="navbar bg-base-200 shadow-sm sticky top-0 z-30">
+        <div class="flex-none lg:hidden">
+          <label for="sidebar-toggle" class="btn btn-square btn-ghost">
+            <i class="fas fa-bars text-lg"></i>
+          </label>
+        </div>
+        <div class="flex-1">
+          <span class="text-lg font-bold px-2">{% block title_bar %}{% endblock %}</span>
+        </div>
+        <div class="flex-none">
+          <!-- Theme toggle -->
+          <button id="theme-toggle" class="btn btn-ghost btn-circle" title="Toggle theme">
+            <i class="fas fa-moon text-lg" id="theme-icon"></i>
+          </button>
+        </div>
+      </div>
+
+      <!-- Flash messages -->
+      <div id="flash-container" class="px-4 pt-4">
+        {% if messages %}
+          {% for msg in messages %}
+            <div class="alert alert-{{ msg.type if msg.type else 'info' }} shadow-sm mb-2 flash-msg">
+              <span>{{ msg.text if msg.text else msg }}</span>
+            </div>
+          {% endfor %}
+        {% endif %}
+      </div>
+
+      <!-- Page content -->
+      <main class="flex-1 p-4 lg:p-6">
+        {% block content %}{% endblock %}
+      </main>
+    </div>
+
+    <!-- Sidebar -->
+    <div class="drawer-side z-40">
+      <label for="sidebar-toggle" aria-label="close sidebar" class="drawer-overlay"></label>
+      <aside class="bg-base-200 w-64 min-h-full flex flex-col">
+        <!-- Brand -->
+        <div class="p-4 border-b border-base-300">
+          <a href="/dashboard" class="text-xl font-bold flex items-center gap-2">
+            <i class="fas fa-door-open text-primary"></i>
+            <span>Meross Bridge</span>
+          </a>
+        </div>
+
+        <!-- Navigation -->
+        <ul class="menu flex-1 px-2 py-4 gap-1">
+          <!-- MAIN -->
+          <li class="menu-title"><span>MAIN</span></li>
+          <li>
+            <a href="/dashboard" class="{{ 'active' if request.url.path == '/dashboard' else '' }}">
+              <i class="fas fa-gauge w-5 text-center"></i>
+              Dashboard
+            </a>
+          </li>
+
+          <!-- CONFIG -->
+          <li class="menu-title mt-4"><span>CONFIG</span></li>
+          <li>
+            <a href="/doors" class="{{ 'active' if request.url.path == '/doors' else '' }}">
+              <i class="fas fa-door-open w-5 text-center"></i>
+              Doors
+            </a>
+          </li>
+          <li>
+            <a href="/settings" class="{{ 'active' if request.url.path == '/settings' else '' }}">
+              <i class="fas fa-sliders w-5 text-center"></i>
+              Settings
+            </a>
+          </li>
+
+          <!-- SYSTEM -->
+          <li class="menu-title mt-4"><span>SYSTEM</span></li>
+          <li>
+            <a href="/logs" class="{{ 'active' if request.url.path == '/logs' else '' }}">
+              <i class="fas fa-terminal w-5 text-center"></i>
+              Logs
+            </a>
+          </li>
+        </ul>
+
+        <!-- User section -->
+        <div class="border-t border-base-300 p-4">
+          <div class="flex items-center justify-between">
+            <div class="flex items-center gap-2">
+              <i class="fas fa-user-circle text-lg"></i>
+              <span class="text-sm font-medium">{{ current_user }}</span>
+            </div>
+            <a href="/logout" class="btn btn-ghost btn-xs" title="Logout">
+              <i class="fas fa-right-from-bracket"></i>
+            </a>
+          </div>
+        </div>
+      </aside>
+    </div>
+  </div>
+
+  <script>
+    // Theme toggle
+    const themeToggle = document.getElementById('theme-toggle');
+    const themeIcon = document.getElementById('theme-icon');
+
+    function applyTheme(theme) {
+      document.documentElement.setAttribute('data-theme', theme);
+      localStorage.setItem('meross-theme', theme);
+      themeIcon.className = theme === 'dark' ? 'fas fa-moon text-lg' : 'fas fa-sun text-lg';
+    }
+
+    // Initialize icon
+    const currentTheme = localStorage.getItem('meross-theme') || 'dark';
+    applyTheme(currentTheme);
+
+    themeToggle.addEventListener('click', function() {
+      const current = document.documentElement.getAttribute('data-theme');
+      applyTheme(current === 'dark' ? 'light' : 'dark');
+    });
+
+    // Auto-dismiss flash messages after 5 seconds
+    document.querySelectorAll('.flash-msg').forEach(function(el) {
+      setTimeout(function() {
+        el.style.transition = 'opacity 0.5s';
+        el.style.opacity = '0';
+        setTimeout(function() { el.remove(); }, 500);
+      }, 5000);
+    });
+  </script>
+
+  {% block scripts %}{% endblock %}
+</body>
+</html>

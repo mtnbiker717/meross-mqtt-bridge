@@ -1,0 +1,12 @@
+fastapi
+uvicorn[standard]
+jinja2
+pyyaml
+bcrypt
+itsdangerous
+paho-mqtt
+aiofiles
+websockets
+aiohttp
+python-multipart
+meross_iot==0.4.7.3
