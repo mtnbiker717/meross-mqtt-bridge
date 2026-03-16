@@ -9,6 +9,7 @@ import functools
 import hashlib
 import json
 import os
+import re
 import secrets
 import threading
 import time
@@ -453,7 +454,6 @@ async def change_password_submit(
 # Account settings
 # ---------------------------------------------------------------------------
 
-import re
 
 _USERNAME_RE = re.compile(r"^[a-zA-Z0-9_]+$")
 
