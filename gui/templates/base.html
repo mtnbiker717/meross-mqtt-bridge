@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en" data-theme="night">
+<html lang="en" data-theme="dim">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -10,7 +10,7 @@
   <script>
     (function() {
       const saved = localStorage.getItem('meross-theme');
-      const theme = saved === 'dark' ? 'night' : (saved || (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'night' : 'light'));
+      const theme = saved === 'dark' ? 'dim' : (saved || (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dim' : 'light'));
       document.documentElement.setAttribute('data-theme', theme);
     })();
   </script>
@@ -128,17 +128,17 @@
     function applyTheme(theme) {
       document.documentElement.setAttribute('data-theme', theme);
       localStorage.setItem('meross-theme', theme);
-      themeIcon.className = theme === 'night' ? 'fas fa-moon text-lg' : 'fas fa-sun text-lg';
+      themeIcon.className = theme === 'dim' ? 'fas fa-moon text-lg' : 'fas fa-sun text-lg';
     }
 
     // Initialize icon
     const savedTheme = localStorage.getItem('meross-theme');
-    const currentTheme = savedTheme === 'dark' ? 'night' : (savedTheme || (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'night' : 'light'));
+    const currentTheme = savedTheme === 'dark' ? 'dim' : (savedTheme || (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dim' : 'light'));
     applyTheme(currentTheme);
 
     themeToggle.addEventListener('click', function() {
       const current = document.documentElement.getAttribute('data-theme');
-      applyTheme(current === 'night' ? 'light' : 'night');
+      applyTheme(current === 'dim' ? 'light' : 'dim');
     });
 
     // Auto-dismiss flash messages after 5 seconds
