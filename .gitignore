@@ -1,6 +1,7 @@
 legacy/
 config/config.yaml
 config/.secret_key
+config/.env
 logs/
 __pycache__/
 *.pyc

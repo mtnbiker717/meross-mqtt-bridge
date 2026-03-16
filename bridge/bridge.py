@@ -23,6 +23,8 @@ from meross_iot.manager import MerossManager
 from watchdog.observers import Observer
 from watchdog.events import FileSystemEventHandler
 
+from crypto import get_fernet, decrypt_value, is_encrypted
+
 # ---------------------------------------------------------------------------
 # Paths
 # ---------------------------------------------------------------------------
@@ -92,6 +94,33 @@ def load_config() -> dict:
     logger.info("Loading config from %s", path)
     with open(path, "r") as f:
         return yaml.safe_load(f) or {}
+
+
+def _decrypt_config_credentials(cfg: dict) -> dict:
+    """Decrypt credential fields if SECRET_KEY is available and values are encrypted."""
+    try:
+        f = get_fernet()
+    except RuntimeError:
+        return cfg  # No SECRET_KEY — run in plaintext mode
+
+    meross = cfg.get("meross", {})
+    for field in ("email", "password"):
+        val = meross.get(field, "")
+        if val and is_encrypted(val):
+            try:
+                meross[field] = decrypt_value(f, val)
+            except Exception:
+                pass  # Leave as-is if decryption fails
+
+    mqtt = cfg.get("mqtt", {})
+    val = mqtt.get("pass", "")
+    if val and is_encrypted(val):
+        try:
+            mqtt["pass"] = decrypt_value(f, val)
+        except Exception:
+            pass
+
+    return cfg
 
 
 def config_is_ready(cfg: dict) -> bool:
@@ -425,6 +454,7 @@ class MerossMQTTBridge:
         while self.running:
             try:
                 self.cfg = load_config()
+                self.cfg = _decrypt_config_credentials(self.cfg)
             except Exception:
                 logger.exception("Failed to load config, retrying in 10s")
                 await asyncio.sleep(10)

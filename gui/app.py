@@ -38,6 +38,8 @@ from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
 from itsdangerous import BadSignature, SignatureExpired, URLSafeTimedSerializer
 
+from crypto import get_fernet, encrypt_value, decrypt_value, is_encrypted
+
 # ---------------------------------------------------------------------------
 # Paths
 # ---------------------------------------------------------------------------
@@ -85,6 +87,27 @@ def update_config_section(section: str, data) -> None:
     cfg = read_config()
     cfg[section] = data
     write_config(cfg)
+
+def _encrypt_credential(value: str) -> str:
+    """Encrypt a credential value if SECRET_KEY is available."""
+    if not value or is_encrypted(value):
+        return value
+    try:
+        f = get_fernet()
+        return encrypt_value(f, value)
+    except RuntimeError:
+        return value  # No SECRET_KEY — store plaintext
+
+
+def _decrypt_credential(value: str) -> str:
+    """Decrypt a credential value if it's encrypted and SECRET_KEY is available."""
+    if not value or not is_encrypted(value):
+        return value
+    try:
+        f = get_fernet()
+        return decrypt_value(f, value)
+    except (RuntimeError, Exception):
+        return value  # Can't decrypt — return as-is
 
 # ---------------------------------------------------------------------------
 # Session / Auth
@@ -632,6 +655,8 @@ async def settings_page(request: Request, user: str = Depends(require_auth)):
     token = request.cookies.get("session", "")
     cfg = read_config()
     meross = cfg.get("meross", {})
+    # Decrypt email for form display
+    meross["email"] = _decrypt_credential(meross.get("email", ""))
     mqtt_cfg = cfg.get("mqtt", {})
     bridge = cfg.get("bridge", {})
     return render(
@@ -661,6 +686,17 @@ async def settings_save(request: Request, user: str = Depends(require_auth)):
         cfg["mqtt"] = incoming_mqtt
     if "bridge" in body:
         cfg["bridge"] = body["bridge"]
+    # Encrypt credentials before writing
+    if "meross" in cfg:
+        m = cfg["meross"]
+        if m.get("email"):
+            m["email"] = _encrypt_credential(m["email"])
+        if m.get("password"):
+            m["password"] = _encrypt_credential(m["password"])
+    if "mqtt" in cfg:
+        mq = cfg["mqtt"]
+        if mq.get("pass"):
+            mq["pass"] = _encrypt_credential(mq["pass"])
     write_config(cfg)
 
     flash(token, "Settings saved.")
@@ -677,7 +713,7 @@ async def test_meross(request: Request, user: str = Depends(require_auth)):
     # If password field was left empty, use the saved one
     if not password:
         cfg = read_config()
-        password = cfg.get("meross", {}).get("password", "")
+        password = _decrypt_credential(cfg.get("meross", {}).get("password", ""))
 
     if not email or not password:
         return JSONResponse({"success": False, "message": "Email and password are required."})
@@ -707,7 +743,7 @@ async def test_mqtt(request: Request, user: str = Depends(require_auth)):
     # If password field was left empty, use the saved one
     if not mqtt_pass:
         cfg = read_config()
-        mqtt_pass = cfg.get("mqtt", {}).get("pass", "")
+        mqtt_pass = _decrypt_credential(cfg.get("mqtt", {}).get("pass", ""))
 
     if not host:
         return JSONResponse({"success": False, "message": "Host is required."})
@@ -868,7 +904,7 @@ async def api_door_command(channel: int, request: Request, user: str = Depends(r
     host = mqtt_cfg.get("host", "")
     port = mqtt_cfg.get("port", 1883)
     mqtt_user = mqtt_cfg.get("user", "")
-    mqtt_pass = mqtt_cfg.get("pass", "")
+    mqtt_pass = _decrypt_credential(mqtt_cfg.get("pass", ""))
 
     if not host:
         return JSONResponse({"success": False, "message": "MQTT host not configured."}, status_code=500)

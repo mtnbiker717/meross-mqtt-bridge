@@ -3,9 +3,14 @@ services:
     build: ./bridge
     container_name: meross-bridge
     restart: unless-stopped
+    env_file:
+      - path: config/.env
+        required: false
     volumes:
       - ./config:/app/config
       - ./logs:/app/logs
+    depends_on:
+      - gui
     logging:
       driver: "json-file"
       options:
@@ -16,13 +21,14 @@ services:
     build: ./gui
     container_name: meross-gui
     restart: unless-stopped
+    env_file:
+      - path: config/.env
+        required: false
     ports:
       - "8080:8080"
     volumes:
       - ./config:/app/config
       - ./logs:/app/logs
-    depends_on:
-      - bridge
     logging:
       driver: "json-file"
       options:

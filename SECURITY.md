@@ -26,11 +26,14 @@ The bridge container has no exposed ports — only the GUI container exposes 808
 
 ## Known Limitations
 
-### Credentials stored in plaintext
+### Credentials encrypted at rest
 
-Meross and MQTT passwords are stored in `config/config.yaml` in plaintext. This file is excluded from git (`.gitignore`) and should be protected with appropriate filesystem permissions.
-
-Future improvement: encryption at rest with a machine-derived key.
+Meross and MQTT credentials are encrypted in config/config.yaml using
+Fernet symmetric encryption (cryptography library). The encryption key
+is auto-generated on first boot by the GUI container and stored in
+config/.env, which is gitignored. Neither file is useful without the
+other. Back up both independently — store config/.env in a password
+manager.
 
 ### HTTP only
 
