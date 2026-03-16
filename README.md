@@ -34,48 +34,8 @@ cd meross-mqtt-bridge
 # 2. Create required directories
 mkdir -p config logs
 
-# 3. Create the default config
-cat > config/config.yaml << 'EOF'
-meross:
-  email: ""
-  password: ""
-  api_url: "https://iot.meross.com"
-
-mqtt:
-  host: ""
-  port: 1883
-  user: ""
-  pass: ""
-  combined_state_topic: "garage/state"
-
-doors:
-  - name: ""
-    channel: 1
-    command_topic: "garage/command/door_1"
-    state_topic: "garage/state/door_1"
-    enabled: false
-  - name: ""
-    channel: 2
-    command_topic: "garage/command/door_2"
-    state_topic: "garage/state/door_2"
-    enabled: false
-  - name: ""
-    channel: 3
-    command_topic: "garage/command/door_3"
-    state_topic: "garage/state/door_3"
-    enabled: false
-
-bridge:
-  poll_interval: 300
-  reconnect_base_delay: 30
-  reconnect_max_delay: 300
-  log_level: "INFO"
-
-gui:
-  username: "admin"
-  password_hash: ""
-  force_password_change: true
-EOF
+# 3. Create your config from the example
+cp config/config.example.yaml config/config.yaml
 
 # 4. Build and start
 docker compose up -d --build
