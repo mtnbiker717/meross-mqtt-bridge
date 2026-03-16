@@ -34,6 +34,14 @@
       color: rgba(255, 255, 255, 0.35);
     }
 
+    /* Theme-aware icon color */
+    :root {
+      --icon-color: rgba(0, 0, 0, 0.6);
+    }
+    [data-theme="dim"] {
+      --icon-color: rgba(255, 255, 255, 0.75);
+    }
+
     /* Inter font everywhere */
     body {
       font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
