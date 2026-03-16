@@ -3,12 +3,23 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Login - Meross MQTT Bridge</title>
+  <title>Meross Bridge</title>
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/daisyui@4/dist/full.min.css">
   <script src="https://cdn.tailwindcss.com"></script>
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+  <script>
+    (function() {
+      const saved = localStorage.getItem('meross-theme');
+      const theme = saved || (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
+      document.documentElement.setAttribute('data-theme', theme);
+    })();
+  </script>
 </head>
-<body class="min-h-screen flex items-center justify-center bg-base-300">
+<body class="min-h-screen flex items-center justify-center bg-base-300 relative">
+  <!-- Theme toggle -->
+  <button id="theme-toggle" class="btn btn-ghost btn-circle absolute top-4 right-4" title="Toggle theme">
+    <i class="fas fa-moon text-lg" id="theme-icon"></i>
+  </button>
   <div class="card w-full max-w-sm bg-base-200 shadow-xl">
     <div class="card-body">
       <!-- Heading -->
@@ -56,5 +67,21 @@
       </form>
     </div>
   </div>
+
+  <script>
+    const themeToggle = document.getElementById('theme-toggle');
+    const themeIcon = document.getElementById('theme-icon');
+    function applyTheme(theme) {
+      document.documentElement.setAttribute('data-theme', theme);
+      localStorage.setItem('meross-theme', theme);
+      themeIcon.className = theme === 'dark' ? 'fas fa-moon text-lg' : 'fas fa-sun text-lg';
+    }
+    const currentTheme = localStorage.getItem('meross-theme') || (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
+    applyTheme(currentTheme);
+    themeToggle.addEventListener('click', function() {
+      const current = document.documentElement.getAttribute('data-theme');
+      applyTheme(current === 'dark' ? 'light' : 'dark');
+    });
+  </script>
 </body>
 </html>

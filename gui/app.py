@@ -5,6 +5,7 @@ Session-based web interface for configuring and monitoring the bridge.
 """
 
 import asyncio
+import functools
 import hashlib
 import json
 import os
@@ -13,6 +14,7 @@ import threading
 import time
 from collections import defaultdict
 from contextlib import asynccontextmanager
+from datetime import datetime, timezone
 from pathlib import Path
 from typing import Optional
 
@@ -504,6 +506,43 @@ async def test_meross(request: Request, user: str = Depends(require_auth)):
     except Exception as e:
         return JSONResponse({"success": False, "message": f"Connection failed: {e}"})
 
+
+@app.post("/settings/test-mqtt")
+async def test_mqtt(request: Request, user: str = Depends(require_auth)):
+    body = await request.json()
+    host = body.get("host", "")
+    port = int(body.get("port", 1883))
+    mqtt_user = body.get("user", "")
+    mqtt_pass = body.get("pass", "")
+
+    # If password field was left empty, use the saved one
+    if not mqtt_pass:
+        cfg = read_config()
+        mqtt_pass = cfg.get("mqtt", {}).get("pass", "")
+
+    if not host:
+        return JSONResponse({"success": False, "message": "Host is required."})
+
+    def _try_connect():
+        client = mqtt_client.Client(client_id=f"gui-test-{int(time.time())}")
+        if mqtt_user:
+            client.username_pw_set(mqtt_user, mqtt_pass)
+        client.connect(host, port, keepalive=5)
+        client.disconnect()
+        return f"Connected to broker at {host}:{port}"
+
+    try:
+        loop = asyncio.get_event_loop()
+        msg = await asyncio.wait_for(
+            loop.run_in_executor(None, _try_connect),
+            timeout=5.0,
+        )
+        return JSONResponse({"success": True, "message": msg})
+    except asyncio.TimeoutError:
+        return JSONResponse({"success": False, "message": f"Connection to {host}:{port} timed out."})
+    except Exception as e:
+        return JSONResponse({"success": False, "message": str(e)})
+
 # ---------------------------------------------------------------------------
 # Logs page
 # ---------------------------------------------------------------------------
@@ -581,7 +620,28 @@ async def api_status(user: str = Depends(require_auth)):
             bridge_running = (time.time() - mtime) < 60
     except OSError:
         pass
-    return {"bridge_running": bridge_running}
+    last_updated = None
+    state_file = LOGS_DIR / "door_states.json"
+    try:
+        if state_file.exists():
+            with open(state_file, "r") as f:
+                states_data = json.load(f)
+            # Look for a timestamp field in the data
+            if isinstance(states_data, dict) and "timestamp" in states_data:
+                last_updated = states_data["timestamp"]
+            elif isinstance(states_data, list) and states_data:
+                # Use file mtime as fallback
+                last_updated = datetime.fromtimestamp(
+                    state_file.stat().st_mtime, tz=timezone.utc
+                ).isoformat()
+            else:
+                last_updated = datetime.fromtimestamp(
+                    state_file.stat().st_mtime, tz=timezone.utc
+                ).isoformat()
+    except (OSError, json.JSONDecodeError):
+        pass
+
+    return {"bridge_running": bridge_running, "last_updated": last_updated}
 
 
 @app.get("/api/doors/state")

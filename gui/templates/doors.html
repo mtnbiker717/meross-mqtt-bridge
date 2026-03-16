@@ -1,5 +1,5 @@
 {% extends "base.html" %}
-{% block title %}Door Configuration{% endblock %}
+{% block title %}Doors - Meross Bridge{% endblock %}
 {% block title_bar %}Door Configuration{% endblock %}
 
 {% block content %}
@@ -91,6 +91,41 @@
       alert.style.opacity = '0';
       setTimeout(function() { alert.remove(); }, 500);
     }, 4000);
+  }
+
+  // Auto-populate topics from name
+  var defaultCommandPatterns = [/^garage\/command\/.+$/, /^$/];
+  var defaultStatePatterns = [/^garage\/state\/door_\d+$/, /^$/];
+
+  function slugify(name) {
+    return name.toLowerCase().replace(/\s+/g, '_').replace(/[^a-z0-9_]/g, '');
+  }
+
+  function isDefaultCommand(val, ch) {
+    return val === '' || /^garage\/command\//.test(val);
+  }
+
+  function isDefaultState(val, ch) {
+    return val === '' || val === 'garage/state/door_' + ch;
+  }
+
+  for (var i = 0; i < 3; i++) {
+    (function(idx) {
+      var ch = parseInt(document.querySelector('input[name="doors[' + idx + '][channel]"]').value) || (idx + 1);
+      var nameInput = document.querySelector('input[name="doors[' + idx + '][name]"]');
+      var cmdInput = document.querySelector('input[name="doors[' + idx + '][command_topic]"]');
+      var stateInput = document.querySelector('input[name="doors[' + idx + '][state_topic]"]');
+
+      nameInput.addEventListener('input', function() {
+        var slug = slugify(this.value);
+        if (slug && isDefaultCommand(cmdInput.value, ch)) {
+          cmdInput.value = 'garage/command/' + slug;
+        }
+        if (slug && isDefaultState(stateInput.value, ch)) {
+          stateInput.value = 'garage/state/door_' + ch;
+        }
+      });
+    })(i);
   }
 
   document.getElementById('doors-form').addEventListener('submit', function(e) {

@@ -3,14 +3,15 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>{% block title %}Meross MQTT Bridge{% endblock %}</title>
+  <title>{% block title %}Meross Bridge{% endblock %}</title>
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/daisyui@4/dist/full.min.css">
   <script src="https://cdn.tailwindcss.com"></script>
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
   <script>
     (function() {
-      const saved = localStorage.getItem('meross-theme') || 'dark';
-      document.documentElement.setAttribute('data-theme', saved);
+      const saved = localStorage.getItem('meross-theme');
+      const theme = saved || (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
+      document.documentElement.setAttribute('data-theme', theme);
     })();
   </script>
 </head>
@@ -131,7 +132,7 @@
     }
 
     // Initialize icon
-    const currentTheme = localStorage.getItem('meross-theme') || 'dark';
+    const currentTheme = localStorage.getItem('meross-theme') || (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
     applyTheme(currentTheme);
 
     themeToggle.addEventListener('click', function() {

@@ -1,13 +1,16 @@
 {% extends "base.html" %}
-{% block title %}Dashboard{% endblock %}
+{% block title %}Dashboard - Meross Bridge{% endblock %}
 {% block title_bar %}Dashboard{% endblock %}
 
 {% block content %}
 <!-- Bridge status indicator -->
-<div class="flex items-center gap-2 mb-6" id="bridge-status">
+<div class="flex items-center gap-2 mb-1" id="bridge-status">
   <span class="loading loading-spinner loading-sm" id="bridge-spinner"></span>
   <span id="bridge-status-dot" class="hidden w-3 h-3 rounded-full"></span>
   <span id="bridge-status-text" class="text-sm font-medium">Checking bridge status...</span>
+</div>
+<div class="mb-6">
+  <span id="last-updated" class="text-xs text-base-content/40"></span>
 </div>
 
 <!-- Loading spinner (shown until first poll completes) -->
@@ -49,6 +52,8 @@
 <script>
   const doorChannels = [1, 2, 3];
   let firstLoad = true;
+  let lastBridgeRunning = null;
+  let lastAllUnknown = true;
 
   // Send door command
   document.querySelectorAll('.door-cmd-btn').forEach(function(btn) {
@@ -128,14 +133,31 @@
     });
   }
 
+  function updateLastUpdated(isoStr) {
+    const el = document.getElementById('last-updated');
+    if (isoStr) {
+      var d = new Date(isoStr);
+      el.textContent = 'Last updated: ' + d.toLocaleTimeString();
+    } else {
+      el.textContent = 'Last updated: ' + new Date().toLocaleTimeString();
+    }
+  }
+
   // Poll bridge status
   function pollStatus() {
     fetch('/api/status')
       .then(function(r) { return r.json(); })
       .then(function(data) {
-        updateBridgeStatus(data.bridge_running || false);
+        lastBridgeRunning = data.bridge_running || false;
+        // Show offline if bridge not running AND all doors unknown
+        var connected = lastBridgeRunning || !lastAllUnknown;
+        updateBridgeStatus(connected);
+        if (data.last_updated) {
+          updateLastUpdated(data.last_updated);
+        }
       })
       .catch(function() {
+        lastBridgeRunning = false;
         updateBridgeStatus(false);
       });
   }
@@ -146,16 +168,29 @@
       .then(function(r) { return r.json(); })
       .then(function(data) {
         const doors = data.doors || data;
+        var allUnknown = true;
         if (Array.isArray(doors)) {
           doors.forEach(function(door) {
             updateDoorCard(door.channel, door);
+            if (door.state && door.state !== 'unknown') allUnknown = false;
           });
         } else {
           doorChannels.forEach(function(ch) {
             if (doors[ch] || doors[String(ch)]) {
-              updateDoorCard(ch, doors[ch] || doors[String(ch)]);
+              var door = doors[ch] || doors[String(ch)];
+              updateDoorCard(ch, door);
+              if (door.state && door.state !== 'unknown') allUnknown = false;
             }
           });
+        }
+
+        lastAllUnknown = allUnknown;
+        updateLastUpdated(null);
+
+        // Re-evaluate bridge status with new door data
+        if (lastBridgeRunning !== null) {
+          var connected = lastBridgeRunning || !lastAllUnknown;
+          updateBridgeStatus(connected);
         }
 
         if (firstLoad) {

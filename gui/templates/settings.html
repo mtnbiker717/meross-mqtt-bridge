@@ -1,5 +1,5 @@
 {% extends "base.html" %}
-{% block title %}Settings{% endblock %}
+{% block title %}Settings - Meross Bridge{% endblock %}
 {% block title_bar %}Settings{% endblock %}
 
 {% block content %}
@@ -91,6 +91,14 @@
           </button>
         </div>
       </div>
+
+      <div class="flex items-center gap-3 mt-4">
+        <button type="button" id="test-mqtt-btn" class="btn btn-outline btn-sm">
+          <i class="fas fa-plug mr-1"></i>
+          Test Connection
+        </button>
+        <span id="mqtt-test-result" class="hidden"></span>
+      </div>
     </div>
   </div>
 </div>
@@ -172,6 +180,52 @@
       resultEl.textContent = 'Failed: ' + err.message;
       if (testResultTimer) clearTimeout(testResultTimer);
       testResultTimer = setTimeout(function() {
+        resultEl.classList.add('hidden');
+      }, 10000);
+    });
+  });
+
+  // Test MQTT connection
+  var mqttTestTimer = null;
+  document.getElementById('test-mqtt-btn').addEventListener('click', function() {
+    const btn = this;
+    const resultEl = document.getElementById('mqtt-test-result');
+    btn.classList.add('loading');
+    resultEl.classList.add('hidden');
+
+    fetch('/settings/test-mqtt', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        host: document.getElementById('mqtt-host').value,
+        port: parseInt(document.getElementById('mqtt-port').value) || 1883,
+        user: document.getElementById('mqtt-user').value,
+        pass: document.getElementById('mqtt-pass').value
+      })
+    })
+    .then(function(r) { return r.json(); })
+    .then(function(data) {
+      btn.classList.remove('loading');
+      resultEl.classList.remove('hidden');
+      if (data.success) {
+        resultEl.className = 'badge badge-success';
+        resultEl.textContent = 'Connected';
+      } else {
+        resultEl.className = 'badge badge-error';
+        resultEl.textContent = 'Failed: ' + (data.message || 'Unknown error');
+      }
+      if (mqttTestTimer) clearTimeout(mqttTestTimer);
+      mqttTestTimer = setTimeout(function() {
+        resultEl.classList.add('hidden');
+      }, 10000);
+    })
+    .catch(function(err) {
+      btn.classList.remove('loading');
+      resultEl.classList.remove('hidden');
+      resultEl.className = 'badge badge-error';
+      resultEl.textContent = 'Failed: ' + err.message;
+      if (mqttTestTimer) clearTimeout(mqttTestTimer);
+      mqttTestTimer = setTimeout(function() {
         resultEl.classList.add('hidden');
       }, 10000);
     });
