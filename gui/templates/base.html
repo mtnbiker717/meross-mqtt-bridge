@@ -8,14 +8,22 @@
   <title>{% block title %}Meross Bridge{% endblock %}</title>
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/daisyui@4/dist/full.min.css">
   <style>
+    /* Consistent green primary across both themes */
+    :root {
+      --color-primary: oklch(60% 0.185 150);
+      --color-primary-content: oklch(98% 0.02 150);
+      --icon-color: rgba(0, 0, 0, 0.6);
+    }
+
     /* Custom dark mode color overrides */
     [data-theme="dim"] {
       --color-base-100: oklch(27.0% 0.025 252);
       --color-base-200: oklch(18.0% 0.020 252);
       --color-base-300: oklch(14.0% 0.025 252);
       --color-base-content: oklch(97.3% 0.004 247);
-      --color-primary: oklch(49.0% 0.145 252.3);
-      --color-primary-content: oklch(97% 0.01 252);
+      --color-primary: oklch(60% 0.185 150);
+      --color-primary-content: oklch(98% 0.02 150);
+      --icon-color: rgba(255, 255, 255, 0.75);
     }
 
     /* Card border for definition in dark mode */
@@ -32,14 +40,6 @@
     /* Nav section labels */
     [data-theme="dim"] .menu-title {
       color: rgba(255, 255, 255, 0.35);
-    }
-
-    /* Theme-aware icon color */
-    :root {
-      --icon-color: rgba(0, 0, 0, 0.6);
-    }
-    [data-theme="dim"] {
-      --icon-color: rgba(255, 255, 255, 0.75);
     }
 
     /* Inter font everywhere */
