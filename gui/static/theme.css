@@ -3,24 +3,21 @@
    ===================================================== */
 @import url('https://fonts.googleapis.com/css2?family=Inter:ital,opsz,wght@0,14..32,400..700;1,14..32,400..700&display=swap');
 
-:root {
-  --color-primary: oklch(60% 0.185 150) !important;
-  --color-primary-content: oklch(98% 0.02 150) !important;
+/* DaisyUI v4 uses short variable names with raw oklch parameters */
+:root,
+[data-theme="light"] {
+  --p: 60% 0.185 150;   /* primary — green */
+  --pc: 98% 0.02 150;   /* primary-content */
   --icon-color: rgba(0, 0, 0, 0.6);
 }
 
-[data-theme="light"] {
-  --color-primary: oklch(60% 0.185 150) !important;
-  --color-primary-content: oklch(98% 0.02 150) !important;
-}
-
 [data-theme="dim"] {
-  --color-base-100: oklch(27.0% 0.025 252);
-  --color-base-200: oklch(18.0% 0.020 252);
-  --color-base-300: oklch(14.0% 0.025 252);
-  --color-base-content: oklch(97.3% 0.004 247);
-  --color-primary: oklch(60% 0.185 150) !important;
-  --color-primary-content: oklch(98% 0.02 150) !important;
+  --b1: 27.0% 0.025 252;   /* base-100 */
+  --b2: 18.0% 0.020 252;   /* base-200 */
+  --b3: 14.0% 0.025 252;   /* base-300 */
+  --bc: 97.3% 0.004 247;   /* base-content */
+  --p: 60% 0.185 150;
+  --pc: 98% 0.02 150;
   --icon-color: rgba(255, 255, 255, 0.75);
 }
 
