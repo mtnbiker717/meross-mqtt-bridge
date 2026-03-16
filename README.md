@@ -4,6 +4,10 @@ A self-hosted Docker bridge between the Meross MSG200 garage door opener and a l
 
 ![Dashboard](docs/dashboard.png)
 
+> **Homelab project** — This was built for personal use and published for the community.
+> It works well but has not undergone a formal security audit. See [SECURITY.md](SECURITY.md)
+> for known limitations before deploying. Contributions and issues are welcome.
+
 ## Features
 
 - Bridges the Meross cloud API to your local MQTT broker
