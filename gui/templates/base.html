@@ -1,35 +1,16 @@
 <!DOCTYPE html>
-<html lang="en" data-theme="dark">
+<html lang="en" data-theme="night">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>{% block title %}Meross Bridge{% endblock %}</title>
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/daisyui@4/dist/full.min.css">
-  <style>
-    /* Custom dark theme overrides — make cards pop */
-    [data-theme="dark"] {
-      --b1: #111318;   /* page background — very dark */
-      --b2: #1a1d24;   /* sidebar, navbar */
-      --b3: #22262f;   /* card background — visibly lighter than page */
-      --bc: #d1d5db;   /* base content — brighter text */
-    }
-
-    /* Card border to add definition in dark mode */
-    [data-theme="dark"] .card {
-      border: 1px solid rgba(255,255,255,0.07);
-    }
-
-    /* Sidebar nav links — more visible text */
-    [data-theme="dark"] .menu-title span {
-      color: rgba(255,255,255,0.35);
-    }
-  </style>
   <script src="https://cdn.tailwindcss.com"></script>
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
   <script>
     (function() {
       const saved = localStorage.getItem('meross-theme');
-      const theme = saved || (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
+      const theme = saved === 'dark' ? 'night' : (saved || (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'night' : 'light'));
       document.documentElement.setAttribute('data-theme', theme);
     })();
   </script>
@@ -147,16 +128,17 @@
     function applyTheme(theme) {
       document.documentElement.setAttribute('data-theme', theme);
       localStorage.setItem('meross-theme', theme);
-      themeIcon.className = theme === 'dark' ? 'fas fa-moon text-lg' : 'fas fa-sun text-lg';
+      themeIcon.className = theme === 'night' ? 'fas fa-moon text-lg' : 'fas fa-sun text-lg';
     }
 
     // Initialize icon
-    const currentTheme = localStorage.getItem('meross-theme') || (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
+    const savedTheme = localStorage.getItem('meross-theme');
+    const currentTheme = savedTheme === 'dark' ? 'night' : (savedTheme || (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'night' : 'light'));
     applyTheme(currentTheme);
 
     themeToggle.addEventListener('click', function() {
       const current = document.documentElement.getAttribute('data-theme');
-      applyTheme(current === 'dark' ? 'light' : 'dark');
+      applyTheme(current === 'night' ? 'light' : 'night');
     });
 
     // Auto-dismiss flash messages after 5 seconds
