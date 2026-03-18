@@ -12,7 +12,7 @@ import random
 import signal
 import sys
 import time
-from datetime import datetime
+from datetime import datetime, timezone
 from logging.handlers import RotatingFileHandler
 from pathlib import Path
 
@@ -327,7 +327,7 @@ class MerossMQTTBridge:
             if door.get("enabled"):
                 name = door.get("name") or f"door_{door['channel']}"
                 combined[name] = self.door_states.get(door["channel"], "unknown")
-        combined["timestamp"] = datetime.now().isoformat()
+        combined["timestamp"] = datetime.now(timezone.utc).isoformat()
 
         combined_topic = self.cfg.get("mqtt", {}).get("combined_state_topic", "garage/state")
         self.mqtt_client.publish(combined_topic, json.dumps(combined), retain=True)
@@ -347,7 +347,7 @@ class MerossMQTTBridge:
                         "state_topic": door.get("state_topic", ""),
                         "command_topic": door.get("command_topic", ""),
                     }
-            data["timestamp"] = datetime.now().isoformat()
+            data["timestamp"] = datetime.now(timezone.utc).isoformat()
             states_file.write_text(json.dumps(data, indent=2))
         except Exception:
             logger.exception("Error writing door_states.json")
